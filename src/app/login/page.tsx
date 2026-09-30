@@ -1,13 +1,45 @@
 'use client'
 
 import { FormEvent, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    // Autenticação real será conectada ao backend na próxima etapa.
+    setLoading(true)
+    setError('')
+
+    const formData = new FormData(event.currentTarget)
+    const email = String(formData.get('email') ?? '')
+    const password = String(formData.get('password') ?? '')
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        setError(data.error ?? 'E-mail ou senha incorretos.')
+        return
+      }
+
+      const next = searchParams.get('next')
+      router.replace(next && next.startsWith('/') ? next : '/')
+      router.refresh()
+    } catch {
+      setError('Não foi possível conectar ao servidor.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -46,17 +78,23 @@ export default function LoginPage() {
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label htmlFor="password" className="block text-sm font-semibold">Senha</label>
-                  <button type="button" className="text-xs font-semibold text-slate-500 hover:text-slate-900">Esqueci minha senha</button>
                 </div>
                 <div className="relative">
                   <input id="password" name="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required placeholder="Digite sua senha" className="w-full rounded-xl border border-slate-200 px-4 py-3.5 pr-20 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200" />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-100">{showPassword ? 'Ocultar' : 'Mostrar'}</button>
                 </div>
               </div>
-              <button type="submit" className="w-full rounded-xl bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800">Entrar</button>
+
+              {error && (
+                <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</p>
+              )}
+
+              <button type="submit" disabled={loading} className="w-full rounded-xl bg-slate-900 py-3.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60">
+                {loading ? 'Entrando...' : 'Entrar'}
+              </button>
             </form>
 
-            <p className="mt-8 text-center text-sm text-slate-500">Ainda não possui uma conta? <button type="button" className="font-semibold text-slate-900">Criar conta</button></p>
+            <p className="mt-8 text-center text-sm text-slate-500">Acesso restrito ao usuário autorizado.</p>
           </div>
         </section>
       </div>
