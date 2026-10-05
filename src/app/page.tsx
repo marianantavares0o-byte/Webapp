@@ -128,39 +128,77 @@ export default function Home() {
 
         {tab === "visao" && (
           <>
-            <section className="hero-grid">
-              <div className="balance-card">
-                <div className="card-top"><span>Saldo disponível</span><span className="pill positive">Atual</span></div>
+            <section className="overview-top">
+              <div className="balance-card balance-card-modern">
+                <div className="card-top"><span>Saldo total disponível</span><span className="pill positive">Hoje</span></div>
                 <strong className="balance">{money(balance)}</strong>
-                <div className="balance-meta"><span>Projetado no fim do mês</span><strong>{money(projectedBalance)}</strong></div>
-                <div className="progress"><span style={{ width: Math.min(100, Math.max(8, (balance / 4000) * 100)) + "%" }}/></div>
-              </div>
-              <div className="metric-card"><span>Entradas previstas</span><strong>{money(expectedIncome)}</strong><small>3 recebimentos estimados</small><div className="metric-icon"><Icon name="arrow"/></div></div>
-              <div className="metric-card"><span>Gastos pendentes</span><strong>{money(totalPending)}</strong><small>{pending.length} despesas a pagar</small><div className="metric-icon warm"><Icon name="wallet"/></div></div>
-            </section>
-
-            <section className="grid-2">
-              <div className="panel">
-                <div className="panel-heading"><div><h2>Próximos compromissos</h2><p>O que merece sua atenção primeiro.</p></div><button className="text-button" onClick={() => setTab("gastos")}>Ver todos <Icon name="chevron"/></button></div>
-                <div className="priority-list">{pending.slice(0, 4).map((e) => (
-                  <div className="priority-row" key={e.id}><div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}><strong>{e.due.split("/")[0]}</strong><span>OUT</span></div><div className="row-main"><strong>{e.name}</strong><span>{e.category}</span></div><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong></div>
-                ))}</div>
+                <p className="balance-caption">Valor livre para decisões financeiras antes dos próximos compromissos.</p>
+                <div className="balance-meta"><span>Saldo projetado após entradas e pagamentos</span><strong>{money(projectedBalance)}</strong></div>
+                <div className="progress"><span style={{ width: Math.min(100, Math.max(8, (balance / 5000) * 100)) + "%" }}/></div>
               </div>
 
-              <div className="panel alert-panel">
-                <div className="panel-heading"><div><h2>Alertas inteligentes</h2><p>Baseados no saldo e nos prazos.</p></div><Icon name="bell"/></div>
-                <div className="alert"><span className="alert-mark red">!</span><div><strong>{nextPayment?.name} vence em breve</strong><p>Reserve {money(nextPayment?.amount || 0)} para não comprometer o próximo recebimento.</p></div></div>
-                <div className="alert"><span className="alert-mark blue">i</span><div><strong>Compra planejada: celular</strong><p>Para uma viagem em 25/11, considere comprar com antecedência para absorver prazo de entrega e eventual troca.</p></div></div>
+              <div className="panel allocation-panel">
+                <div className="panel-heading"><div><h2>Destino do dinheiro</h2><p>Distribuição sugerida para manter equilíbrio entre obrigações, segurança e crescimento.</p></div><Icon name="target"/></div>
+                <div className="allocation-layout">
+                  <div className="donut-chart"><div className="donut-center"><strong>100%</strong><span>planejado</span></div></div>
+                  <div className="allocation-legend">
+                    <div><i className="allocation-dot essential"/> <span>Pagamentos essenciais</span><strong>55%</strong></div>
+                    <div><i className="allocation-dot reserve"/> <span>Reserva e liquidez</span><strong>20%</strong></div>
+                    <div><i className="allocation-dot investment"/> <span>Investimentos</span><strong>15%</strong></div>
+                    <div><i className="allocation-dot flexible"/> <span>Pequenos gastos</span><strong>10%</strong></div>
+                  </div>
+                </div>
               </div>
             </section>
 
-            <section className="grid-2">
-              <div className="panel">
-                <div className="panel-heading"><div><h2>Fluxo semanal</h2><p>Entradas e saídas registradas.</p></div><span className="period">Últimos 7 dias</span></div>
-                <div className="bars"><div className="bar-group"><span className="bar income" style={{height:"70%"}}/><span className="bar expense" style={{height:"42%"}}/><small>Seg</small></div><div className="bar-group"><span className="bar income" style={{height:"52%"}}/><span className="bar expense" style={{height:"64%"}}/><small>Ter</small></div><div className="bar-group"><span className="bar income" style={{height:"82%"}}/><span className="bar expense" style={{height:"38%"}}/><small>Qua</small></div><div className="bar-group"><span className="bar income" style={{height:"45%"}}/><span className="bar expense" style={{height:"54%"}}/><small>Qui</small></div><div className="bar-group"><span className="bar income" style={{height:"88%"}}/><span className="bar expense" style={{height:"31%"}}/><small>Sex</small></div><div className="bar-group"><span className="bar income" style={{height:"34%"}}/><span className="bar expense" style={{height:"25%"}}/><small>Sáb</small></div><div className="bar-group"><span className="bar income" style={{height:"22%"}}/><span className="bar expense" style={{height:"19%"}}/><small>Dom</small></div></div>
-                <div className="legend"><span><i className="dot income-dot"/> Recebido</span><span><i className="dot expense-dot"/> Gasto</span><strong>Saldo semanal: +R$ 742</strong></div>
+            <section className="overview-main-grid">
+              <div className="panel commitments-panel">
+                <div className="panel-heading">
+                  <div><h2>Próximos compromissos</h2><p>Pagamentos organizados do prazo mais próximo ao mais distante.</p></div>
+                  <button className="text-button" onClick={() => setTab("gastos")}>Ver gastos <Icon name="chevron"/></button>
+                </div>
+                <div className="commitments-list">
+                  {[...pending].sort((a,b) => Number(a.due.split("/")[0]) - Number(b.due.split("/")[0])).map((e) => (
+                    <div className="commitment-card" key={e.id}>
+                      <div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}>
+                        <strong>{e.due.split("/")[0]}</strong><span>OUT</span>
+                      </div>
+                      <div className="commitment-main">
+                        <div className="commitment-title"><strong>{e.name}</strong><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span></div>
+                        <span>{e.category} · {money(e.amount)}</span>
+                      </div>
+                      <div className="commitment-alert">
+                        <span className={e.urgency === "Alta" ? "alert-mark red" : "alert-mark blue"}>{e.urgency === "Alta" ? "!" : "i"}</span>
+                        <p>{e.urgency === "Alta" ? "Prioridade: separe este valor antes do vencimento." : "Planeje este pagamento para não comprometer o saldo."}</p>
+                      </div>
+                      <strong className="commitment-value">{money(e.amount)}</strong>
+                    </div>
+                  ))}
+                  <div className="commitments-total"><span>Total de gastos pendentes</span><strong>{money(totalPending)}</strong></div>
+                </div>
               </div>
-              <div className="panel recommendation-panel"><div className="panel-heading"><div><h2>Recomendação da semana</h2><p>Uma leitura objetiva do seu momento.</p></div><span className="spark">↗</span></div><div className="score"><div><span>Margem projetada</span><strong>{savingsRate}%</strong></div><div className="score-track"><span style={{width: savingsRate + "%"}}/></div></div><ul>{recommendations.map((r) => <li key={r}>{r}</li>)}</ul></div>
+
+              <div className="panel calendar-panel">
+                <div className="panel-heading"><div><h2>Calendário financeiro</h2><p>Pagamentos e recebimentos previstos em outubro.</p></div><span className="period">OUT 2026</span></div>
+                <FinancialCalendar expenses={expenses} income={income}/>
+              </div>
+            </section>
+
+            <section className="overview-bottom-grid">
+              <div className="panel recommendation-panel recommendation-modern">
+                <div className="panel-heading"><div><h2>Recomendação da semana</h2><p>Prioridades calculadas a partir do saldo, prazos e entradas estimadas.</p></div><span className="spark">↗</span></div>
+                <div className="recommendation-score"><strong>{savingsRate}%</strong><span>margem financeira projetada</span></div>
+                <ul>
+                  <li>Reserve primeiro os pagamentos de alta urgência antes de assumir novos gastos.</li>
+                  <li>O salário previsto entre 13 e 15/10 aumenta a liquidez, mas deve ser tratado como estimativa até o recebimento.</li>
+                  <li>Depois dos compromissos, priorize reserva de liquidez e só então aumente gastos discricionários.</li>
+                </ul>
+              </div>
+              <div className="panel overview-summary">
+                <div className="panel-heading"><div><h2>Leitura rápida</h2><p>O que merece atenção agora.</p></div><Icon name="shield"/></div>
+                <div className="quick-stat"><span>Próximo pagamento</span><strong>{nextPayment ? nextPayment.name : "Nenhum"}</strong><small>{nextPayment ? nextPayment.due + " · " + money(nextPayment.amount) : "Sem compromissos pendentes"}</small></div>
+                <div className="quick-stat"><span>Próxima entrada</span><strong>{income[0].name}</strong><small>{income[0].range + " · " + money(income[0].amount)}</small></div>
+              </div>
             </section>
           </>
         )}
@@ -202,4 +240,33 @@ function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expec
   const discretionary = total-essential;
   const savings = Math.max(0, expectedIncome-total);
   return <section className="page-section"><div className="panel monthly"><div className="panel-heading"><div><p className="eyebrow">OUTUBRO 2026</p><h2>Seu mês em números</h2><p>Uma leitura simples do quanto entrou, saiu e pode ser poupado.</p></div><span className="period">Projeção</span></div><div className="analysis-grid"><div className="big-number"><span>Entradas</span><strong>{money(expectedIncome)}</strong><small>estimadas</small></div><div className="big-number"><span>Saídas</span><strong>{money(total)}</strong><small>planejadas</small></div><div className="big-number"><span>Potencial de poupança</span><strong>{money(savings)}</strong><small>{expectedIncome ? Math.round(savings/expectedIncome*100) : 0}% das entradas</small></div></div><div className="category-list"><div><span>Essenciais e compromissos</span><div className="line"><i style={{width: Math.min(100, essential/total*100)+"%"}}/></div><strong>{money(essential)}</strong></div><div><span>Discricionários</span><div className="line"><i style={{width: Math.min(100, discretionary/total*100)+"%"}}/></div><strong>{money(discretionary)}</strong></div></div><div className="monthly-advice"><strong>Leitura do mês</strong><p>{savings > total*0.2 ? "Sua projeção indica uma margem relevante para poupança. Antes de elevar o padrão de consumo, direcione parte desse excedente para uma meta definida." : "Sua projeção deixa pouca margem para poupança. Priorize compromissos, reduza gastos discricionários e revise receitas estimadas antes de assumir novas parcelas."}</p></div></div></section>;
+}
+
+function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
+  const cells = Array.from({ length: 35 }, (_, i) => i - 4);
+  const events: Record<number, { type: "payment" | "income"; label: string }[]> = {};
+  expenses.forEach((e) => {
+    const day = Number(e.due.split("/")[0]);
+    if (!events[day]) events[day] = [];
+    events[day].push({ type: "payment", label: e.name });
+  });
+  income.forEach((i) => {
+    const day = Number(i.range.split(/[–-]/)[0]);
+    if (!events[day]) events[day] = [];
+    events[day].push({ type: "income", label: i.name });
+  });
+  return <div className="financial-calendar">
+    <div className="calendar-weekdays">{["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map(d => <span key={d}>{d}</span>)}</div>
+    <div className="calendar-grid">
+      {cells.map((day) => {
+        const inMonth = day > 0 && day <= 31;
+        const dayEvents = inMonth ? (events[day] || []) : [];
+        return <div className={"calendar-day " + (!inMonth ? "muted" : "") + (day === 5 ? " today" : "")} key={day}>
+          <strong>{inMonth ? day : day <= 0 ? 27 + day : day - 31}</strong>
+          {dayEvents.slice(0,2).map((event, index) => <span key={event.type + event.label + index} className={"calendar-event " + event.type}>{event.type === "income" ? "↑ " : "↓ "}{event.label}</span>)}
+        </div>;
+      })}
+    </div>
+    <div className="calendar-legend"><span><i className="dot income-dot"/> Recebimento</span><span><i className="dot expense-dot"/> Pagamento</span></div>
+  </div>;
 }
