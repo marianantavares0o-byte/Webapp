@@ -44,3 +44,43 @@ footer{color:#9aa5b0;font-size:8px;margin:25px 0 5px}
 
 @media(max-width:1000px){.hero-grid{grid-template-columns:1fr 1fr}.balance-card{grid-column:span 2}.grid-2{grid-template-columns:1fr}}
 @media(max-width:700px){.app-shell{display:block}.sidebar{position:static;width:100%;padding:15px}.profile,.sidebar-bottom{display:none}.sidebar nav{display:flex;overflow-x:auto}.nav-item{white-space:nowrap;width:auto}.content{width:100%;margin:0;padding:20px 14px}.topbar{align-items:center}.topbar h1{font-size:21px}.hero-grid,.summary-strip,.analysis-grid{grid-template-columns:1fr}.balance-card{grid-column:auto}.income-card{grid-template-columns:35px 1fr auto}.income-card .confidence{grid-column:2/-1;width:max-content}.category-list>div{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.table-head,.table-row{min-width:650px}}
+
+
+/* Fluxo — nova identidade visual e visão geral */
+:root{--ink:#17233a;--muted:#77849a;--navy:#111b35;--navy-2:#1d2b52;--teal:#4fd1b5;--cyan:#67c7ff;--violet:#8b7cf6;--coral:#ff8b7d;--surface:#ffffff;--bg:#f4f7fc;--line:#e5eaf3}
+html,body{background:radial-gradient(circle at 85% 8%,rgba(139,124,246,.10),transparent 26%),radial-gradient(circle at 20% 85%,rgba(79,209,181,.08),transparent 28%),var(--bg);color:var(--ink)}
+.sidebar{background:linear-gradient(180deg,#111a34 0%,#172342 58%,#202b50 100%);box-shadow:10px 0 35px rgba(17,27,53,.08)}
+.brand-mark{background:linear-gradient(135deg,var(--teal),var(--cyan));color:#102238}
+.nav-item:hover,.nav-item.active{background:linear-gradient(90deg,rgba(79,209,181,.17),rgba(139,124,246,.10));color:#fff}
+.content{max-width:1600px}
+.primary{background:linear-gradient(135deg,#1b2a4d,#273b68);box-shadow:0 8px 18px rgba(25,42,76,.14)}
+.primary:hover{background:linear-gradient(135deg,#23375f,#304a80)}
+.balance-card-modern{background:linear-gradient(135deg,#162342 0%,#22375f 55%,#28536a 100%);position:relative;overflow:hidden}
+.balance-card-modern:after{content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-80px;top:-100px;background:radial-gradient(circle,rgba(103,199,255,.26),transparent 65%)}
+.balance-caption{color:#b5c1d4;margin:0 0 18px;max-width:430px}
+.overview-top{display:grid;grid-template-columns:1.08fr 1fr;gap:16px;margin-bottom:16px}
+.allocation-panel{min-height:250px}
+.allocation-layout{display:grid;grid-template-columns:190px 1fr;gap:24px;align-items:center}
+.donut-chart{width:178px;height:178px;border-radius:50%;background:conic-gradient(#6171e8 0 55%,#4fd1b5 55% 75%,#67c7ff 75% 90%,#ff9b8f 90% 100%);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),0 12px 30px rgba(51,74,130,.12)}
+.donut-chart:before{content:"";position:absolute;width:128px;height:128px;border-radius:50%;background:#fff}
+.donut-center{z-index:1;text-align:center;display:grid;gap:2px}.donut-center strong{font-size:22px}.donut-center span{font-size:8px;color:var(--muted)}
+.allocation-legend{display:grid;gap:12px}.allocation-legend>div{display:grid;grid-template-columns:10px 1fr auto;gap:8px;align-items:center;font-size:9px;color:#66758a}.allocation-legend strong{font-size:10px;color:#273650}.allocation-dot{width:8px;height:8px;border-radius:50%}.allocation-dot.essential{background:#6171e8}.allocation-dot.reserve{background:#4fd1b5}.allocation-dot.investment{background:#67c7ff}.allocation-dot.flexible{background:#ff9b8f}
+.overview-main-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:16px}
+.commitments-panel,.calendar-panel{min-height:470px}
+.commitments-list{display:grid;gap:8px}
+.commitment-card{display:grid;grid-template-columns:46px minmax(150px,1fr) minmax(180px,.9fr) auto;gap:13px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(135deg,#fff,#fbfcff)}
+.commitment-card:hover{border-color:#cbd4e8;box-shadow:0 7px 18px rgba(28,46,82,.05)}
+.commitment-main>span{display:block;color:#8a96a8;font-size:8px;margin-top:4px}.commitment-title{display:flex;align-items:center;gap:7px}.commitment-title strong{font-size:10px}
+.commitment-alert{display:flex;gap:7px;align-items:center;background:#f7f9fd;border-radius:9px;padding:7px}.commitment-alert p{font-size:8px;line-height:1.35}.commitment-alert .alert-mark{width:20px;height:20px}
+.commitment-value{font-size:10px;white-space:nowrap}.commitments-total{display:flex;justify-content:space-between;align-items:center;border-top:2px solid #e7ebf2;padding:15px 3px 0;margin-top:4px}.commitments-total span{font-size:9px;color:#748196}.commitments-total strong{font-size:14px;color:#1e3154}
+.financial-calendar{margin-top:4px}.calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.calendar-weekdays{margin-bottom:6px}.calendar-weekdays span{text-align:center;color:#98a2b1;font-size:8px;font-weight:800}
+.calendar-day{min-height:58px;border:1px solid #e9edf4;border-radius:8px;padding:5px;background:#fff;overflow:hidden}.calendar-day>strong{font-size:9px;color:#506078}.calendar-day.muted{background:#fafbfc}.calendar-day.muted>strong{color:#c2c8d1}.calendar-day.today{border-color:#6a78e8;box-shadow:inset 0 0 0 1px #6a78e8}
+.calendar-event{display:block;font-size:6.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:4px;padding:2px 3px;margin-top:4px;font-weight:700}.calendar-event.payment{background:#fff0ed;color:#c55f54}.calendar-event.income{background:#e9f9f4;color:#318b74}
+.calendar-legend{display:flex;gap:15px;margin-top:12px;font-size:8px;color:#7b8798}.calendar-legend span{display:flex;align-items:center;gap:5px}
+.overview-bottom-grid{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:16px}.recommendation-modern{background:linear-gradient(145deg,#fff,#f8f9ff)}
+.recommendation-score{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}.recommendation-score strong{font-size:32px;letter-spacing:-1px;background:linear-gradient(90deg,#5364dc,#2da88b);-webkit-background-clip:text;background-clip:text;color:transparent}.recommendation-score span{font-size:9px;color:#8290a3}
+.recommendation-modern li{position:relative;padding-left:16px}.recommendation-modern li:before{content:"";position:absolute;left:0;top:6px;width:6px;height:6px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--violet))}
+.overview-summary{display:grid;align-content:start}.quick-stat{border:1px solid var(--line);border-radius:11px;padding:13px;margin-bottom:9px;background:#fbfcff}.quick-stat span,.quick-stat small{display:block;color:#8a96a8;font-size:8px}.quick-stat strong{display:block;font-size:11px;margin:5px 0}.quick-stat small{font-size:8px}
+footer{color:#9aa6b7}
+@media(max-width:1100px){.overview-top,.overview-main-grid,.overview-bottom-grid{grid-template-columns:1fr}.commitments-panel,.calendar-panel{min-height:auto}.allocation-layout{grid-template-columns:170px 1fr}}
+@media(max-width:700px){.overview-top,.overview-main-grid,.overview-bottom-grid{grid-template-columns:1fr}.allocation-layout{grid-template-columns:1fr;justify-items:center}.allocation-legend{width:100%}.commitment-card{grid-template-columns:42px 1fr auto}.commitment-alert{grid-column:2/-1}.commitment-value{grid-column:3;grid-row:1}.calendar-day{min-height:50px}.calendar-event{font-size:5.5px}.calendar-weekdays{gap:3px}.calendar-grid{gap:3px}}
