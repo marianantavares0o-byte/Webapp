@@ -313,8 +313,8 @@ function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expec
           <div><span>Diretriz</span><strong>{highUrgency > 0 ? "Proteger liquidez" : "Aumentar reserva"}</strong><p>{highUrgency > 0 ? "Separe os compromissos de alta urgência antes de ampliar gastos ou investimentos." : "Com os compromissos controlados, priorize a formação de reserva e investimentos."}</p></div>
         </div>
       </div>
-    </section>;
-}
+    </section>
+  }
 
 function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
   const [selectedMonth, setSelectedMonth] = useState(9);
