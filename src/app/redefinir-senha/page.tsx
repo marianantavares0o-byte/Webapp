@@ -1,11 +1,12 @@
 "use client";
 
+import { Suspense } from "react";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function ResetPage(){
+function ResetPage(){
   const params=useSearchParams(); const [email,setEmail]=useState(params.get("email")||""); const [token,setToken]=useState(""); const [password,setPassword]=useState(""); const [confirm,setConfirm]=useState("");
   const [error,setError]=useState(""); const [success,setSuccess]=useState(""); const [loading,setLoading]=useState(false);
   async function submit(e:FormEvent){e.preventDefault();setError("");setSuccess("");
@@ -24,4 +25,9 @@ export default function ResetPage(){
     <form onSubmit={submit} className="auth-form"><label>E-mail<input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Código<input inputMode="numeric" pattern="\d{6}" maxLength={6} required value={token} onChange={e=>setToken(e.target.value.replace(/\D/g,""))} placeholder="000000"/></label><label>Nova senha<input type="password" required minLength={5} maxLength={20} value={password} onChange={e=>setPassword(e.target.value)}/></label><label>Confirmar nova senha<input type="password" required minLength={5} maxLength={20} value={confirm} onChange={e=>setConfirm(e.target.value)}/></label>
     {error&&<p className="auth-error">{error}</p>}{success&&<p className="auth-success">{success}</p>}<button className="primary auth-submit" disabled={loading}>{loading?"Salvando...":"Redefinir senha"}</button></form><Link className="auth-link" href="/login">Voltar para o login</Link>
   </section></main>;
+}
+
+
+export default function Page(){
+  return <Suspense fallback={<main className="auth-page"><section className="auth-card"><p>Carregando...</p></section></main>}><ResetPage /></Suspense>;
 }
