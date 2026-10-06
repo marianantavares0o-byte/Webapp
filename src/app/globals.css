@@ -119,3 +119,47 @@ footer{color:#9aa6b7}
 .calendar-nav:disabled{opacity:.35;cursor:not-allowed}
 .calendar-month-select{width:100%;height:34px;border:1px solid #e1e6ef;border-radius:8px;background:#fff;color:#253652;padding:0 10px;font-size:9px;font-weight:800;outline:none}
 .calendar-month-select:focus{border-color:#6a78e8;box-shadow:0 0 0 3px rgba(106,120,232,.12)}
+
+
+/* Fluxo — análise geral */
+.general-analysis{display:grid;gap:15px}
+.analysis-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;background:linear-gradient(135deg,#fff,#f7f9ff)}
+.analysis-hero h2{font-size:19px;margin-top:6px}
+.analysis-hero>div:first-child p:last-child{font-size:10px;max-width:720px}
+.analysis-period-toggle{display:flex;gap:4px;padding:4px;border:1px solid #e3e8f1;border-radius:10px;background:#f6f8fb;flex:none}
+.analysis-period-toggle button{border:0;background:transparent;color:#7b8798;border-radius:7px;padding:8px 13px;font-size:9px;font-weight:800}
+.analysis-period-toggle button.active{background:#172542;color:#fff;box-shadow:0 4px 10px rgba(23,37,66,.12)}
+.analysis-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.analysis-kpis>div{background:#fff;border:1px solid var(--line);border-radius:13px;padding:16px}
+.analysis-kpis span,.analysis-kpis small{display:block;color:#8996a8;font-size:8px}
+.analysis-kpis strong{display:block;font-size:20px;margin:8px 0 4px;color:#253652}
+.analysis-kpis small{line-height:1.4}
+.analysis-sections{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.analysis-detail{min-height:260px}
+.analysis-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:17px}
+.analysis-detail-grid>div{background:#f7f9fc;border-radius:10px;padding:12px}
+.analysis-detail-grid span,.analysis-detail-grid small{display:block;color:#8a96a8;font-size:8px}
+.analysis-detail-grid strong{display:block;font-size:17px;margin:5px 0 3px}
+.analysis-bars,.expense-split{display:grid;gap:11px}
+.analysis-bars>div{display:grid;grid-template-columns:80px 1fr auto;gap:9px;align-items:center;font-size:8px;color:#718096}
+.analysis-bars>div>div{height:7px;background:#edf0f4;border-radius:8px;overflow:hidden}
+.analysis-bars i,.split-track i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#4fd1b5,#67c7ff)}
+.analysis-bars strong{font-size:8px;color:#4e5e75}
+.expense-split>div{display:grid;grid-template-columns:1fr auto;gap:5px 10px;font-size:8px;color:#718096}
+.expense-split strong{font-size:9px;color:#4e5e75}
+.split-track{grid-column:1/-1;height:7px;background:#edf0f4;border-radius:8px;overflow:hidden}
+.investment-analysis-highlight{background:linear-gradient(135deg,#f2faf7,#f4f8ff);border:1px solid #dfece7;border-radius:11px;padding:14px;margin-bottom:10px}
+.investment-analysis-highlight span,.investment-analysis-highlight small{display:block;color:#7f8d8c;font-size:8px}
+.investment-analysis-highlight strong{display:block;font-size:23px;margin:5px 0 3px}
+.investment-analysis-row{display:flex;justify-content:space-between;gap:15px;padding:10px 0;border-top:1px solid #edf0f3;font-size:8px;color:#718096}
+.investment-analysis-row strong{color:#33445e;font-size:9px}
+.analysis-conclusion{background:linear-gradient(145deg,#172642,#22375f);color:#fff}
+.analysis-conclusion .eyebrow{color:#8f9fba}
+.analysis-conclusion h2{color:#fff}
+.analysis-conclusion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.analysis-conclusion-grid>div{padding:14px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.035)}
+.analysis-conclusion-grid span{display:block;color:#aebbd0;font-size:8px}
+.analysis-conclusion-grid strong{display:block;font-size:18px;margin:7px 0 5px;color:#fff}
+.analysis-conclusion-grid p{color:#8f9fba;font-size:8px;line-height:1.5}
+@media(max-width:900px){.analysis-kpis{grid-template-columns:1fr 1fr}.analysis-sections{grid-template-columns:1fr}.analysis-conclusion-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.analysis-hero{align-items:flex-start;flex-direction:column}.analysis-kpis{grid-template-columns:1fr}.analysis-detail-grid{grid-template-columns:1fr}.analysis-period-toggle{width:100%}.analysis-period-toggle button{flex:1}}

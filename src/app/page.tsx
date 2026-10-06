@@ -102,7 +102,7 @@ export default function Home() {
     ["gastos", "Gastos", "wallet"],
     ["receitas", "Receitas", "arrow"],
     ["investimentos", "Investimentos", "trend"],
-    ["analise", "Análise mensal", "chart"]
+    ["analise", "Análise geral", "chart"]
   ] as const;
 
   return (
@@ -232,11 +232,88 @@ function InvestmentView({ balance }: { balance: number }) {
 }
 
 function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expectedIncome:number }) {
-  const total = expenses.reduce((s,e)=>s+e.amount,0);
-  const essential = expenses.filter(e=>["Alta","Média"].includes(e.urgency)).reduce((s,e)=>s+e.amount,0);
-  const discretionary = total-essential;
-  const savings = Math.max(0, expectedIncome-total);
-  return <section className="page-section"><div className="panel monthly"><div className="panel-heading"><div><p className="eyebrow">OUTUBRO 2026</p><h2>Seu mês em números</h2><p>Uma leitura simples do quanto entrou, saiu e pode ser poupado.</p></div><span className="period">Projeção</span></div><div className="analysis-grid"><div className="big-number"><span>Entradas</span><strong>{money(expectedIncome)}</strong><small>estimadas</small></div><div className="big-number"><span>Saídas</span><strong>{money(total)}</strong><small>planejadas</small></div><div className="big-number"><span>Potencial de poupança</span><strong>{money(savings)}</strong><small>{expectedIncome ? Math.round(savings/expectedIncome*100) : 0}% das entradas</small></div></div><div className="category-list"><div><span>Essenciais e compromissos</span><div className="line"><i style={{width: Math.min(100, essential/total*100)+"%"}}/></div><strong>{money(essential)}</strong></div><div><span>Discricionários</span><div className="line"><i style={{width: Math.min(100, discretionary/total*100)+"%"}}/></div><strong>{money(discretionary)}</strong></div></div><div className="monthly-advice"><strong>Leitura do mês</strong><p>{savings > total*0.2 ? "Sua projeção indica uma margem relevante para poupança. Antes de elevar o padrão de consumo, direcione parte desse excedente para uma meta definida." : "Sua projeção deixa pouca margem para poupança. Priorize compromissos, reduza gastos discricionários e revise receitas estimadas antes de assumir novas parcelas."}</p></div></div></section>;
+  const [period, setPeriod] = useState<"mensal" | "semanal">("mensal");
+  const totalExpenses = expenses.reduce((s,e)=>s+e.amount,0);
+  const essential = expenses.filter(e=>e.urgency !== "Baixa").reduce((s,e)=>s+e.amount,0);
+  const discretionary = expenses.filter(e=>e.urgency === "Baixa").reduce((s,e)=>s+e.amount,0);
+  const highUrgency = expenses.filter(e=>e.urgency === "Alta").reduce((s,e)=>s+e.amount,0);
+  const projectedSavings = Math.max(0, expectedIncome - totalExpenses);
+  const savingsRate = expectedIncome ? Math.round(projectedSavings / expectedIncome * 100) : 0;
+  const investmentPrincipal = 500;
+  const annualRate = 0.1198;
+  const investmentDays = 185;
+  const investmentProjected = investmentPrincipal * Math.pow(1 + annualRate, investmentDays / 365);
+  const investmentGain = investmentProjected - investmentPrincipal;
+  const incomeCoverage = totalExpenses ? Math.round(expectedIncome / totalExpenses * 100) : 100;
+  const weeklyIncome = period === "semanal" ? expectedIncome * 0.25 : expectedIncome;
+  const weeklyExpenses = period === "semanal" ? totalExpenses * 0.25 : totalExpenses;
+  const weeklyBalance = weeklyIncome - weeklyExpenses;
+
+  return (
+    <section className="page-section general-analysis">
+      <div className="analysis-hero panel">
+        <div>
+          <p className="eyebrow">ANÁLISE GERAL</p>
+          <h2>Visão aprofundada das suas finanças</h2>
+          <p>Compare o comportamento mensal e semanal de entradas, gastos e investimentos em um único painel.</p>
+        </div>
+        <div className="analysis-period-toggle">
+          <button className={period === "mensal" ? "active" : ""} onClick={() => setPeriod("mensal")}>Mensal</button>
+          <button className={period === "semanal" ? "active" : ""} onClick={() => setPeriod("semanal")}>Semanal</button>
+        </div>
+      </div>
+
+      <div className="analysis-kpis">
+        <div><span>Recebimentos</span><strong>{money(weeklyIncome)}</strong><small>{period === "mensal" ? "estimados no mês" : "estimativa da semana"}</small></div>
+        <div><span>Gastos</span><strong>{money(weeklyExpenses)}</strong><small>{period === "mensal" ? "planejados no mês" : "estimativa da semana"}</small></div>
+        <div><span>Saldo operacional</span><strong>{money(weeklyBalance)}</strong><small>entradas menos gastos</small></div>
+        <div><span>Investimentos</span><strong>{money(investmentGain)}</strong><small>ganho bruto projetado</small></div>
+      </div>
+
+      <div className="analysis-sections">
+        <div className="panel analysis-detail">
+          <div className="panel-heading"><div><h2>Recebimentos</h2><p>Leitura das entradas previstas e da capacidade de cobertura.</p></div><Icon name="arrow"/></div>
+          <div className="analysis-detail-grid">
+            <div><span>Total previsto</span><strong>{money(expectedIncome)}</strong><small>3 entradas registradas</small></div>
+            <div><span>Cobertura dos gastos</span><strong>{incomeCoverage}%</strong><small>entradas ÷ gastos planejados</small></div>
+          </div>
+          <div className="analysis-bars">
+            <div><span>Salário</span><div><i style={{width: Math.min(100, 3200 / Math.max(1, expectedIncome) * 100) + "%"}}/></div><strong>{money(3200)}</strong></div>
+            <div><span>Freelance</span><div><i style={{width: Math.min(100, 600 / Math.max(1, expectedIncome) * 100) + "%"}}/></div><strong>{money(600)}</strong></div>
+            <div><span>Reembolso</span><div><i style={{width: Math.min(100, 180 / Math.max(1, expectedIncome) * 100) + "%"}}/></div><strong>{money(180)}</strong></div>
+          </div>
+        </div>
+
+        <div className="panel analysis-detail">
+          <div className="panel-heading"><div><h2>Gastos</h2><p>Composição, urgência e impacto sobre o dinheiro disponível.</p></div><Icon name="wallet"/></div>
+          <div className="analysis-detail-grid">
+            <div><span>Total planejado</span><strong>{money(totalExpenses)}</strong><small>5 compromissos</small></div>
+            <div><span>Alta urgência</span><strong>{money(highUrgency)}</strong><small>valor que deve ser protegido primeiro</small></div>
+          </div>
+          <div className="expense-split">
+            <div><span>Essenciais e compromissos</span><strong>{money(essential)}</strong><div className="split-track"><i style={{width: Math.min(100, totalExpenses ? essential / totalExpenses * 100 : 0) + "%"}}/></div></div>
+            <div><span>Discricionários</span><strong>{money(discretionary)}</strong><div className="split-track"><i style={{width: Math.min(100, totalExpenses ? discretionary / totalExpenses * 100 : 0) + "%"}}/></div></div>
+          </div>
+        </div>
+
+        <div className="panel analysis-detail">
+          <div className="panel-heading"><div><h2>Investimentos</h2><p>Acompanhe capital aplicado, prazo e retorno projetado.</p></div><Icon name="trend"/></div>
+          <div className="investment-analysis-highlight"><span>Capital considerado</span><strong>{money(investmentPrincipal)}</strong><small>simulação a 11,98% a.a. por 185 dias</small></div>
+          <div className="investment-analysis-row"><span>Valor projetado no vencimento</span><strong>{money(investmentProjected)}</strong></div>
+          <div className="investment-analysis-row"><span>Ganho bruto estimado</span><strong>{money(investmentGain)}</strong></div>
+          <div className="investment-analysis-row"><span>Participação do ganho sobre o capital</span><strong>{((investmentGain / investmentPrincipal) * 100).toFixed(2).replace(".", ",")}%</strong></div>
+        </div>
+      </div>
+
+      <div className="panel analysis-conclusion">
+        <div className="panel-heading"><div><p className="eyebrow">LEITURA FINANCEIRA</p><h2>O que os números indicam</h2></div></div>
+        <div className="analysis-conclusion-grid">
+          <div><span>Resultado projetado</span><strong>{money(projectedSavings)}</strong><p>potencial restante após os gastos planejados.</p></div>
+          <div><span>Taxa de poupança</span><strong>{savingsRate}%</strong><p>parcela das entradas que pode permanecer livre após as despesas.</p></div>
+          <div><span>Diretriz</span><strong>{highUrgency > 0 ? "Proteger liquidez" : "Aumentar reserva"}</strong><p>{highUrgency > 0 ? "Separe os compromissos de alta urgência antes de ampliar gastos ou investimentos." : "Com os compromissos controlados, priorize a formação de reserva e investimentos."}</p></div>
+        </div>
+      </div>
+    </section>;
 }
 
 function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
