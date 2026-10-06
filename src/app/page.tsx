@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
 
@@ -62,7 +63,17 @@ export default function Home() {
   const [income] = useState(initialIncome);
   const [balance, setBalance] = useState(2450);
   const [showAdd, setShowAdd] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
   const [newExpense, setNewExpense] = useState({ name: "", amount: "", due: "", urgency: "Média" as Expense["urgency"] });
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => setUserEmail(data.user?.email ?? ""));
+  }, []);
+
+  async function logout() {
+    await createClient().auth.signOut();
+    window.location.href = "/login";
+  }
 
   const pending = expenses.filter((e) => e.status === "Pendente");
   const totalPending = pending.reduce((sum, e) => sum + e.amount, 0);
@@ -111,7 +122,7 @@ export default function Home() {
     <main className="app-shell">
       <aside className="sidebar">
         <div className="brand"><span className="brand-mark">F</span><span>fluxo</span></div>
-        <div className="profile"><div className="avatar">BT</div><div><strong>Meu financeiro</strong><span>Plano pessoal</span></div></div>
+        <div className="profile"><div className="avatar">{userEmail ? userEmail.slice(0,2).toUpperCase() : "FL"}</div><div><strong>{userEmail || "Minha conta"}</strong><span>Conta pessoal</span></div></div>
         <nav>{nav.map(([id, label, icon]) => (
           <button key={id} className={tab === id ? "nav-item active" : "nav-item"} onClick={() => setTab(id)}><Icon name={icon}/><span>{label}</span></button>
         ))}</nav>
