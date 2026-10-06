@@ -314,7 +314,8 @@ function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expec
         </div>
       </div>
     </section>
-  }
+  );
+}
 
 function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
   const [selectedMonth, setSelectedMonth] = useState(9);
