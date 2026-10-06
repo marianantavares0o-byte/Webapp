@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
 
@@ -73,14 +73,11 @@ export default function Home() {
 
   const nextPayment = [...pending].sort((a, b) => a.due.localeCompare(b.due))[0];
 
-  const recommendations = useMemo(() => {
-    const result: string[] = [];
-    if (projectedBalance < 1200) result.push("Evite compras não essenciais até a próxima entrada prevista.");
-    if (pending.some((e) => e.urgency === "Alta" && e.amount > balance * 0.4)) result.push("Priorize despesas de alta urgência que comprometem uma parcela relevante do saldo.");
-    if (savingsRate < 15) result.push("Sua margem de poupança projetada está baixa. Considere adiar gastos de lazer.");
-    else result.push("Há espaço projetado para poupar. Defina uma reserva antes de aumentar gastos discricionários.");
-    return result;
-  }, [projectedBalance, balance, pending, savingsRate]);
+  const highPriorityTotal = pending.filter((e) => e.urgency === "Alta").reduce((sum, e) => sum + e.amount, 0);
+  const nextIncome = [...income].sort((a, b) => a.range.localeCompare(b.range))[0];
+  const balanceAfterHighPriority = balance - highPriorityTotal;
+  const projectedCoverage = totalPending > 0 ? Math.round(((balance + expectedIncome) / totalPending) * 100) : 100;
+  const financialStatus = projectedBalance >= 2500 ? "Confortável" : projectedBalance >= 1200 ? "Controlada" : "Atenção";
 
   function addExpense() {
     const amount = Number(newExpense.amount.replace(",", "."));
@@ -185,21 +182,34 @@ export default function Home() {
               </div>
             </section>
 
-            <section className="overview-bottom-grid">
-              <div className="panel recommendation-panel recommendation-modern">
-                <div className="panel-heading"><div><h2>Recomendação da semana</h2><p>Prioridades calculadas a partir do saldo, prazos e entradas estimadas.</p></div><span className="spark">↗</span></div>
-                <div className="recommendation-score"><strong>{savingsRate}%</strong><span>margem financeira projetada</span></div>
-                <ul>
-                  <li>Reserve primeiro os pagamentos de alta urgência antes de assumir novos gastos.</li>
-                  <li>O salário previsto entre 13 e 15/10 aumenta a liquidez, mas deve ser tratado como estimativa até o recebimento.</li>
-                  <li>Depois dos compromissos, priorize reserva de liquidez e só então aumente gastos discricionários.</li>
-                </ul>
+            <section className="panel financial-feedback">
+              <div className="panel-heading">
+                <div><p className="eyebrow">ANÁLISE E ACONSELHAMENTO</p><h2>Feedback financeiro</h2><p>Uma leitura estruturada do seu momento financeiro, combinando saldo atual, compromissos, entradas estimadas, prazos e margem projetada.</p></div>
+                <span className={"feedback-status " + (financialStatus === "Atenção" ? "attention" : financialStatus === "Controlada" ? "controlled" : "comfortable")}>{financialStatus}</span>
               </div>
-              <div className="panel overview-summary">
-                <div className="panel-heading"><div><h2>Leitura rápida</h2><p>O que merece atenção agora.</p></div><Icon name="shield"/></div>
-                <div className="quick-stat"><span>Próximo pagamento</span><strong>{nextPayment ? nextPayment.name : "Nenhum"}</strong><small>{nextPayment ? nextPayment.due + " · " + money(nextPayment.amount) : "Sem compromissos pendentes"}</small></div>
-                <div className="quick-stat"><span>Próxima entrada</span><strong>{income[0].name}</strong><small>{income[0].range + " · " + money(income[0].amount)}</small></div>
+              <div className="feedback-grid">
+                <div className="feedback-block">
+                  <span className="feedback-label">DIAGNÓSTICO</span>
+                  <strong>{projectedBalance >= balance ? "Seu caixa tende a ganhar força ao longo do período." : "Seu caixa exige maior disciplina no curto prazo."}</strong>
+                  <p>Considerando o saldo de {money(balance)}, as entradas estimadas de {money(expectedIncome)} e os gastos pendentes de {money(totalPending)}, a projeção aponta para {money(projectedBalance)} após os compromissos atualmente registrados.</p>
+                </div>
+                <div className="feedback-block warning">
+                  <span className="feedback-label">PONTO DE ATENÇÃO</span>
+                  <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante." : "Não há pagamentos pendentes registrados."}</strong>
+                  <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Separá-las antes de novos gastos reduz o risco de comprometer a liquidez." : "Sem despesas de alta urgência, a principal tarefa é manter os pagamentos previstos dentro do planejamento."}</p>
+                </div>
+                <div className="feedback-block action">
+                  <span className="feedback-label">ACONSELHAMENTO</span>
+                  <strong>{savingsRate >= 20 ? "Preserve parte da margem antes de aumentar o consumo." : "Priorize liquidez e adie gastos flexíveis."}</strong>
+                  <p>{nextIncome ? "A próxima entrada estimada é " + nextIncome.name + ", na janela de " + nextIncome.range + ". Até o recebimento, trate essa receita como expectativa, não como dinheiro disponível." : "Não há novas entradas estimadas registradas."}</p>
+                </div>
               </div>
+              <div className="feedback-metrics">
+                <div><span>Margem projetada</span><strong>{savingsRate}%</strong><small>após uma reserva-base de R$ 800</small></div>
+                <div><span>Cobertura dos compromissos</span><strong>{projectedCoverage}%</strong><small>saldo + entradas ÷ gastos pendentes</small></div>
+                <div><span>Saldo após urgentes</span><strong>{money(balanceAfterHighPriority)}</strong><small>antes das demais despesas</small></div>
+              </div>
+              <div className="feedback-next-step"><Icon name="target"/><div><strong>Próximo passo recomendado</strong><p>Separe primeiro os valores dos compromissos de alta urgência, mantenha uma reserva de liquidez e só considere gastos discricionários depois de confirmar as entradas estimadas.</p></div></div>
             </section>
           </>
         )}
