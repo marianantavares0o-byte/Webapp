@@ -189,19 +189,9 @@ export default function Home() {
               </div>
               <div className="feedback-text">
                 <div className="feedback-section">
-                  <span className="feedback-label">DIAGNÓSTICO</span>
-                  <strong>{projectedBalance >= balance ? "Seu caixa tende a ganhar força ao longo do período." : "Seu caixa exige maior disciplina no curto prazo."}</strong>
-                  <p>Considerando o saldo de {money(balance)}, as entradas estimadas de {money(expectedIncome)} e os gastos pendentes de {money(totalPending)}, a projeção aponta para {money(projectedBalance)} após os compromissos atualmente registrados.</p>
-                </div>
-                <div className="feedback-section">
-                  <span className="feedback-label">PONTO DE ATENÇÃO</span>
-                  <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante." : "Não há pagamentos pendentes registrados."}</strong>
-                  <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Separá-las antes de novos gastos reduz o risco de comprometer a liquidez." : "Sem despesas de alta urgência, a principal tarefa é manter os pagamentos previstos dentro do planejamento."}</p>
-                </div>
-                <div className="feedback-section">
-                  <span className="feedback-label">ACONSELHAMENTO</span>
-                  <strong>{savingsRate >= 20 ? "Preserve parte da margem antes de aumentar o consumo." : "Priorize liquidez e adie gastos flexíveis."}</strong>
-                  <p>{nextIncome ? "A próxima entrada estimada é " + nextIncome.name + ", na janela de " + nextIncome.range + ". Até o recebimento, trate essa receita como expectativa, não como dinheiro disponível." : "Não há novas entradas estimadas registradas."}</p>
+                  <span className="feedback-label">FEEDBACK</span>
+                  <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante e exige prioridade no planejamento." : "Não há pagamentos pendentes registrados no momento."}</strong>
+                  <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Separe esse valor antes de assumir novos gastos, pois preservar a liquidez reduz o risco de comprometer pagamentos essenciais." : "Mantenha os pagamentos previstos dentro do planejamento e evite comprometer o saldo com despesas flexíveis antes de confirmar as entradas estimadas."} {nextIncome ? "A próxima entrada é " + nextIncome.name + ", prevista para " + nextIncome.range + ". Até o recebimento, trate essa receita como expectativa, não como dinheiro disponível." : "Não há novas entradas estimadas registradas."} {savingsRate >= 20 ? " Como a margem projetada permanece positiva, preserve parte desse excedente antes de aumentar o consumo." : " Como a margem projetada é limitada, priorize liquidez e adie gastos discricionários."}</p>
                 </div>
               </div>
               <div className="feedback-metrics">
