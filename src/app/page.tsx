@@ -184,8 +184,7 @@ export default function Home() {
 
             <section className="panel financial-feedback">
               <div className="panel-heading">
-                <div><p className="eyebrow">ANÁLISE E ACONSELHAMENTO</p><h2>Feedback financeiro</h2><p>Uma leitura estruturada do seu momento financeiro, combinando saldo atual, compromissos, entradas estimadas, prazos e margem projetada.</p></div>
-                <span className={"feedback-status " + (financialStatus === "Atenção" ? "attention" : financialStatus === "Controlada" ? "controlled" : "comfortable")}>{financialStatus}</span>
+                <div><p className="eyebrow">FEEDBACK</p><h2>Feedback financeiro</h2></div>
               </div>
               <div className="feedback-text">
                 <div className="feedback-section">
@@ -198,7 +197,7 @@ export default function Home() {
                 <div><span>Cobertura dos compromissos</span><strong>{projectedCoverage}%</strong><small>saldo + entradas ÷ gastos pendentes</small></div>
                 <div><span>Saldo após urgentes</span><strong>{money(balanceAfterHighPriority)}</strong><small>antes das demais despesas</small></div>
               </div>
-
+            </section>
           </>
         )}
 
