@@ -189,7 +189,6 @@ export default function Home() {
               </div>
               <div className="feedback-text">
                 <div className="feedback-section">
-                  <span className="feedback-label">FEEDBACK</span>
                   <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante e exige prioridade no planejamento." : "Não há pagamentos pendentes registrados no momento."}</strong>
                   <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Separe esse valor antes de assumir novos gastos, pois preservar a liquidez reduz o risco de comprometer pagamentos essenciais." : "Mantenha os pagamentos previstos dentro do planejamento e evite comprometer o saldo com despesas flexíveis antes de confirmar as entradas estimadas."} {nextIncome ? "A próxima entrada é " + nextIncome.name + ", prevista para " + nextIncome.range + ". Até o recebimento, trate essa receita como expectativa, não como dinheiro disponível." : "Não há novas entradas estimadas registradas."} {savingsRate >= 20 ? " Como a margem projetada permanece positiva, preserve parte desse excedente antes de aumentar o consumo." : " Como a margem projetada é limitada, priorize liquidez e adie gastos discricionários."}</p>
                 </div>
@@ -199,8 +198,7 @@ export default function Home() {
                 <div><span>Cobertura dos compromissos</span><strong>{projectedCoverage}%</strong><small>saldo + entradas ÷ gastos pendentes</small></div>
                 <div><span>Saldo após urgentes</span><strong>{money(balanceAfterHighPriority)}</strong><small>antes das demais despesas</small></div>
               </div>
-              <div className="feedback-next-step"><Icon name="target"/><div><strong>Próximo passo recomendado</strong><p>Separe primeiro os valores dos compromissos de alta urgência, mantenha uma reserva de liquidez e só considere gastos discricionários depois de confirmar as entradas estimadas.</p></div></div>
-            </section>
+
           </>
         )}
 
