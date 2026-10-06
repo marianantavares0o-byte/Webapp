@@ -111,3 +111,11 @@ footer{color:#9aa6b7}
 /* Feedback — texto contínuo + indicadores em azul profundo */
 .feedback-text{display:grid;gap:17px}.feedback-section{padding-bottom:15px;border-bottom:1px solid #e8ecf2}.feedback-section:last-child{border-bottom:0;padding-bottom:0}.feedback-section strong{display:block;font-size:16px;line-height:1.5;color:#253652}.feedback-section p{font-size:14px;color:#718096;line-height:1.65;margin-top:8px;max-width:920px}.feedback-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.feedback-metrics>div{border:0;border-radius:12px;padding:15px 16px;background:linear-gradient(145deg,#162442,#22375f);box-shadow:0 8px 18px rgba(20,35,65,.12)}.feedback-metrics span,.feedback-metrics small{display:block;color:#aebbd0;font-size:8px}.feedback-metrics strong{display:block;font-size:21px;margin:7px 0 4px;color:#fff;letter-spacing:-.3px}.feedback-metrics small{color:#8f9fba;line-height:1.4}.feedback-next-step{margin-top:14px}
 @media(max-width:700px){.feedback-metrics{grid-template-columns:1fr}.feedback-section p{max-width:none}}
+
+/* Calendário — navegação por mês */
+.calendar-controls{display:grid;grid-template-columns:36px 1fr 36px;gap:8px;align-items:center;margin-bottom:10px}
+.calendar-nav{height:34px;border:1px solid #e1e6ef;border-radius:8px;background:#fff;color:#53627a;font-size:19px;line-height:1;display:grid;place-items:center}
+.calendar-nav:hover:not(:disabled){background:#f3f6fb;border-color:#cfd7e6}
+.calendar-nav:disabled{opacity:.35;cursor:not-allowed}
+.calendar-month-select{width:100%;height:34px;border:1px solid #e1e6ef;border-radius:8px;background:#fff;color:#253652;padding:0 10px;font-size:9px;font-weight:800;outline:none}
+.calendar-month-select:focus{border-color:#6a78e8;box-shadow:0 0 0 3px rgba(106,120,232,.12)}

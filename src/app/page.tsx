@@ -163,12 +163,13 @@ export default function Home() {
                       </div>
                       <strong className="commitment-value">{money(e.amount)}</strong>
                     </div>
+                  ))}
                   <div className="commitments-total"><span>Total de gastos pendentes</span><strong>{money(totalPending)}</strong></div>
                 </div>
               </div>
 
               <div className="panel calendar-panel">
-                <div className="panel-heading"><div><h2>Calendário financeiro</h2><p>Pagamentos e recebimentos previstos em outubro.</p></div><span className="period">OUT 2026</span></div>
+                <div className="panel-heading"><div><h2>Calendário financeiro</h2><p>Escolha o mês para visualizar pagamentos e recebimentos previstos.</p></div></div>
                 <FinancialCalendar expenses={expenses} income={income}/>
               </div>
             </section>
@@ -232,30 +233,86 @@ function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expec
 }
 
 function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
-  const cells = Array.from({ length: 35 }, (_, i) => i - 4);
+  const [selectedMonth, setSelectedMonth] = useState(9);
+  const year = 2026;
+  const months = [
+    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+  ];
+  const firstDay = new Date(Date.UTC(year, selectedMonth, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, selectedMonth + 1, 0)).getUTCDate();
+  const previousMonthDays = new Date(Date.UTC(year, selectedMonth, 0)).getUTCDate();
+  const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
   const events: Record<number, { type: "payment" | "income"; label: string }[]> = {};
-  expenses.forEach((e) => {
-    const day = Number(e.due.split("/")[0]);
-    if (!events[day]) events[day] = [];
-    events[day].push({ type: "payment", label: e.name });
+
+  expenses.forEach((expense) => {
+    const day = Number(expense.due.split("/")[0]);
+    if (selectedMonth === 9 && day >= 1 && day <= 31) {
+      if (!events[day]) events[day] = [];
+      events[day].push({ type: "payment", label: expense.name });
+    }
   });
-  income.forEach((i) => {
-    const day = Number(i.range.split(/[–-]/)[0]);
-    if (!events[day]) events[day] = [];
-    events[day].push({ type: "income", label: i.name });
+
+  income.forEach((item) => {
+    const day = Number(item.range.split(/[–-]/)[0]);
+    if (selectedMonth === 9 && day >= 1 && day <= 31) {
+      if (!events[day]) events[day] = [];
+      events[day].push({ type: "income", label: item.name });
+    }
   });
-  return <div className="financial-calendar">
-    <div className="calendar-weekdays">{["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map(d => <span key={d}>{d}</span>)}</div>
-    <div className="calendar-grid">
-      {cells.map((day) => {
-        const inMonth = day > 0 && day <= 31;
-        const dayEvents = inMonth ? (events[day] || []) : [];
-        return <div className={"calendar-day " + (!inMonth ? "muted" : "") + (day === 5 ? " today" : "")} key={day}>
-          <strong>{inMonth ? day : day <= 0 ? 27 + day : day - 31}</strong>
-          {dayEvents.slice(0,2).map((event, index) => <span key={event.type + event.label + index} className={"calendar-event " + event.type}>{event.type === "income" ? "↑ " : "↓ "}{event.label}</span>)}
-        </div>;
-      })}
+
+  function changeMonth(delta: number) {
+    setSelectedMonth((current) => Math.min(11, Math.max(0, current + delta)));
+  }
+
+  return (
+    <div className="financial-calendar">
+      <div className="calendar-controls">
+        <button type="button" className="calendar-nav" onClick={() => changeMonth(-1)} disabled={selectedMonth === 0} aria-label="Mês anterior">‹</button>
+        <select
+          className="calendar-month-select"
+          value={selectedMonth}
+          onChange={(event) => setSelectedMonth(Number(event.target.value))}
+          aria-label="Escolher mês"
+        >
+          {months.map((month, index) => <option value={index} key={month}>{month} {year}</option>)}
+        </select>
+        <button type="button" className="calendar-nav" onClick={() => changeMonth(1)} disabled={selectedMonth === 11} aria-label="Próximo mês">›</button>
+      </div>
+
+      <div className="calendar-weekdays">
+        {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => <span key={day}>{day}</span>)}
+      </div>
+
+      <div className="calendar-grid">
+        {Array.from({ length: totalCells }, (_, index) => {
+          const dayNumber = index - firstDay + 1;
+          const inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
+          const displayDay = dayNumber < 1
+            ? previousMonthDays + dayNumber
+            : dayNumber > daysInMonth
+              ? dayNumber - daysInMonth
+              : dayNumber;
+          const dayEvents = inMonth ? (events[dayNumber] || []) : [];
+          const isToday = selectedMonth === 9 && dayNumber === 5;
+
+          return (
+            <div className={"calendar-day " + (!inMonth ? "muted " : "") + (isToday ? "today" : "")} key={index}>
+              <strong>{displayDay}</strong>
+              {dayEvents.slice(0, 2).map((event, eventIndex) => (
+                <span key={event.type + event.label + eventIndex} className={"calendar-event " + event.type}>
+                  {event.type === "income" ? "↑ " : "↓ "}{event.label}
+                </span>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="calendar-legend">
+        <span><i className="dot income-dot" /> Recebimento</span>
+        <span><i className="dot expense-dot" /> Pagamento</span>
+      </div>
     </div>
-    <div className="calendar-legend"><span><i className="dot income-dot"/> Recebimento</span><span><i className="dot expense-dot"/> Pagamento</span></div>
-  </div>;
+  );
 }
