@@ -158,20 +158,11 @@ export default function Home() {
                 <div className="commitments-list">
                   {[...pending].sort((a,b) => Number(a.due.split("/")[0]) - Number(b.due.split("/")[0])).map((e) => (
                     <div className="commitment-card" key={e.id}>
-                      <div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}>
-                        <strong>{e.due.split("/")[0]}</strong><span>OUT</span>
-                      </div>
                       <div className="commitment-main">
-                        <div className="commitment-title"><strong>{e.name}</strong><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span></div>
-                        <span>{e.category} · {money(e.amount)}</span>
-                      </div>
-                      <div className="commitment-alert">
-                        <span className={e.urgency === "Alta" ? "alert-mark red" : "alert-mark blue"}>{e.urgency === "Alta" ? "!" : "i"}</span>
-                        <p>{e.urgency === "Alta" ? "Prioridade: separe este valor antes do vencimento." : "Planeje este pagamento para não comprometer o saldo."}</p>
+                        <strong>{e.name}</strong>
                       </div>
                       <strong className="commitment-value">{money(e.amount)}</strong>
                     </div>
-                  ))}
                   <div className="commitments-total"><span>Total de gastos pendentes</span><strong>{money(totalPending)}</strong></div>
                 </div>
               </div>
