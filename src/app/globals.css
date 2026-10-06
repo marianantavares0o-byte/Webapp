@@ -88,3 +88,21 @@ footer{color:#9aa6b7}
 
 /* Fluxo — autenticação */
 .auth-page{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 20%,rgba(79,209,181,.13),transparent 30%),radial-gradient(circle at 85% 15%,rgba(139,124,246,.13),transparent 28%),#f4f7fc}.auth-card{width:min(430px,100%);background:#fff;border:1px solid #e3e8f1;border-radius:20px;padding:34px;box-shadow:0 24px 70px rgba(25,42,76,.10)}.auth-brand{display:flex;align-items:center;gap:9px;font-size:22px;margin-bottom:28px}.auth-card h1{font-size:26px;margin:0 0 7px}.auth-card>p{font-size:11px;margin-bottom:24px}.auth-form{display:grid;gap:14px;margin-top:20px}.auth-form label{font-size:10px;font-weight:700;color:#66758a}.auth-form input{display:block;width:100%;margin-top:6px;padding:12px 13px;border:1px solid #dce2eb;border-radius:9px;outline:0;background:#fff;color:#17233a}.auth-form input:focus{border-color:#6bcdb2;box-shadow:0 0 0 3px rgba(79,209,181,.14)}.auth-form small{display:block;margin-top:5px;color:#98a3b2;font-size:8px}.auth-submit{width:100%;padding:12px}.auth-link{color:#5364a7;text-decoration:none;text-align:center;font-size:10px;font-weight:700}.auth-link:hover{text-decoration:underline}.auth-secondary{display:flex;justify-content:center;align-items:center;border:1px solid #dce2eb;border-radius:9px;padding:11px;text-decoration:none;color:#273650;font-size:10px;font-weight:700}.auth-divider{text-align:center;color:#a0a9b6;font-size:9px;position:relative}.auth-error,.auth-success{padding:10px;border-radius:8px;font-size:9px!important}.auth-error{background:#fff0ed;color:#b9554d!important}.auth-success{background:#eaf8f3;color:#327c68!important}.auth-message{background:#f7f9fc;border:1px solid #e5eaf2;border-radius:11px;padding:16px;margin:20px 0;display:grid;gap:9px}.auth-message strong{font-size:11px}.auth-message p{font-size:9px}.logout-button{width:100%;margin-top:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:#aeb9c8;border-radius:8px;padding:8px;font-size:9px}.logout-button:hover{background:rgba(255,255,255,.09);color:#fff}
+
+
+/* Fluxo — feedback financeiro estruturado */
+.financial-feedback{margin-bottom:16px;background:linear-gradient(145deg,#fff 0%,#fbfcff 65%,#f7faf9 100%);padding:23px}
+.financial-feedback .panel-heading{align-items:flex-start;margin-bottom:20px}
+.financial-feedback .panel-heading p:not(.eyebrow){max-width:760px;line-height:1.55}
+.feedback-status{padding:7px 10px;border-radius:999px;font-size:8px;font-weight:800;white-space:nowrap}
+.feedback-status.comfortable{background:#eaf8f3;color:#2f806a}.feedback-status.controlled{background:#fff6e5;color:#a97222}.feedback-status.attention{background:#fff0ed;color:#b8564d}
+.feedback-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.feedback-block{border:1px solid var(--line);border-radius:12px;padding:15px;background:rgba(255,255,255,.82);min-height:145px}
+.feedback-block.warning{background:#fffaf7;border-color:#f2e3dc}.feedback-block.action{background:#f7fbfa;border-color:#dfeee8}
+.feedback-label{display:block;font-size:7px;letter-spacing:1px;font-weight:900;color:#8793a5;margin-bottom:9px}
+.feedback-block strong{display:block;font-size:11px;line-height:1.4;color:#253652}.feedback-block p{font-size:9px;color:#718096;line-height:1.55;margin-top:8px}
+.feedback-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:11px}
+.feedback-metrics>div{border-top:1px solid #e7ebf2;padding:13px 3px 3px}.feedback-metrics span,.feedback-metrics small{display:block;color:#8a96a8;font-size:8px}.feedback-metrics strong{display:block;font-size:19px;margin:5px 0 3px;color:#263857}
+.feedback-next-step{display:flex;gap:11px;align-items:flex-start;margin-top:15px;padding:13px 15px;border-radius:11px;background:#162442;color:#fff}.feedback-next-step>.icon{width:20px;height:20px;color:#67d4b6;flex:none;margin-top:1px}.feedback-next-step strong{display:block;font-size:9px}.feedback-next-step p{color:#bdc8d8;font-size:8.5px;line-height:1.5;margin-top:4px}
+@media(max-width:900px){.feedback-grid{grid-template-columns:1fr}.feedback-block{min-height:auto}.feedback-metrics{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.financial-feedback{padding:18px}.feedback-metrics{grid-template-columns:1fr}.feedback-status{display:none}}
