@@ -187,18 +187,18 @@ export default function Home() {
                 <div><p className="eyebrow">ANÁLISE E ACONSELHAMENTO</p><h2>Feedback financeiro</h2><p>Uma leitura estruturada do seu momento financeiro, combinando saldo atual, compromissos, entradas estimadas, prazos e margem projetada.</p></div>
                 <span className={"feedback-status " + (financialStatus === "Atenção" ? "attention" : financialStatus === "Controlada" ? "controlled" : "comfortable")}>{financialStatus}</span>
               </div>
-              <div className="feedback-grid">
-                <div className="feedback-block">
+              <div className="feedback-text">
+                <div className="feedback-section">
                   <span className="feedback-label">DIAGNÓSTICO</span>
                   <strong>{projectedBalance >= balance ? "Seu caixa tende a ganhar força ao longo do período." : "Seu caixa exige maior disciplina no curto prazo."}</strong>
                   <p>Considerando o saldo de {money(balance)}, as entradas estimadas de {money(expectedIncome)} e os gastos pendentes de {money(totalPending)}, a projeção aponta para {money(projectedBalance)} após os compromissos atualmente registrados.</p>
                 </div>
-                <div className="feedback-block warning">
+                <div className="feedback-section">
                   <span className="feedback-label">PONTO DE ATENÇÃO</span>
                   <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante." : "Não há pagamentos pendentes registrados."}</strong>
                   <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Separá-las antes de novos gastos reduz o risco de comprometer a liquidez." : "Sem despesas de alta urgência, a principal tarefa é manter os pagamentos previstos dentro do planejamento."}</p>
                 </div>
-                <div className="feedback-block action">
+                <div className="feedback-section">
                   <span className="feedback-label">ACONSELHAMENTO</span>
                   <strong>{savingsRate >= 20 ? "Preserve parte da margem antes de aumentar o consumo." : "Priorize liquidez e adie gastos flexíveis."}</strong>
                   <p>{nextIncome ? "A próxima entrada estimada é " + nextIncome.name + ", na janela de " + nextIncome.range + ". Até o recebimento, trate essa receita como expectativa, não como dinheiro disponível." : "Não há novas entradas estimadas registradas."}</p>
