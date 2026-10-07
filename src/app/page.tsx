@@ -17,6 +17,7 @@ type Expense = {
 type Income = {
   id: number;
   name: string;
+  source: string;
   amount: number;
   range: string;
   confidence: "Alta" | "Média" | "Baixa";
@@ -31,9 +32,9 @@ const initialExpenses: Expense[] = [
 ];
 
 const initialIncome: Income[] = [
-  { id: 1, name: "Salário", amount: 3200, range: "13–15/10", confidence: "Alta" },
-  { id: 2, name: "Freelance", amount: 600, range: "20–25/10", confidence: "Média" },
-  { id: 3, name: "Reembolso", amount: 180, range: "28–31/10", confidence: "Baixa" }
+  { id: 1, name: "Salário", source: "Empregador", amount: 3200, range: "13–15/10", confidence: "Alta" },
+  { id: 2, name: "Freelance", source: "Cliente de projeto", amount: 600, range: "20–25/10", confidence: "Média" },
+  { id: 3, name: "Reembolso", source: "Empresa responsável", amount: 180, range: "28–31/10", confidence: "Baixa" }
 ];
 
 const money = (value: number) =>
@@ -59,16 +60,19 @@ function Icon({ name }: { name: string }) {
 export default function Home() {
   const [tab, setTab] = useState<Tab>("visao");
   const [expenses, setExpenses] = useState(initialExpenses);
-  const [income] = useState(initialIncome);
+  const [income, setIncome] = useState(initialIncome);
   const [balance, setBalance] = useState(2450);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const [showAddIncome, setShowAddIncome] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   useEffect(() => {
     try {
       const savedExpenses = localStorage.getItem("fluxo-expenses");
+      const savedIncome = localStorage.getItem("fluxo-income");
       const savedBalance = localStorage.getItem("fluxo-balance");
       if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+      if (savedIncome) setIncome(JSON.parse(savedIncome));
       if (savedBalance) setBalance(Number(savedBalance));
     } catch {
       // Mantém os dados iniciais caso o armazenamento local esteja indisponível.
@@ -80,10 +84,12 @@ export default function Home() {
   useEffect(() => {
     if (!storageLoaded) return;
     localStorage.setItem("fluxo-expenses", JSON.stringify(expenses));
+    localStorage.setItem("fluxo-income", JSON.stringify(income));
     localStorage.setItem("fluxo-balance", String(balance));
   }, [expenses, balance, storageLoaded]);
 
   const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
+  const [newIncome, setNewIncome] = useState({ name: "", source: "", amount: "", day: "", confidence: "Média" as Income["confidence"] });
 
 
   const pending = expenses.filter((e) => e.status === "Pendente");
@@ -99,6 +105,25 @@ export default function Home() {
   const balanceAfterHighPriority = balance - highPriorityTotal;
   const projectedCoverage = totalPending > 0 ? Math.round(((balance + expectedIncome) / totalPending) * 100) : 100;
   const financialStatus = projectedBalance >= 2500 ? "Confortável" : projectedBalance >= 1200 ? "Controlada" : "Atenção";
+
+  function addIncome() {
+    const amount = Number(newIncome.amount.replace(",", "."));
+    if (!newIncome.name.trim() || !newIncome.source.trim() || !amount || !newIncome.day.trim()) return;
+    setIncome((current) => [
+      ...current,
+      {
+        id: Date.now(),
+        name: newIncome.name.trim(),
+        source: newIncome.source.trim(),
+        amount,
+        range: newIncome.day.trim(),
+        confidence: newIncome.confidence
+      }
+    ]);
+    setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" });
+    setShowAddIncome(false);
+    setTab("receitas");
+  }
 
   function addExpense() {
     const amount = Number(newExpense.amount.replace(",", "."));
@@ -254,14 +279,29 @@ export default function Home() {
         )}
 
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
-        {tab === "receitas" && <IncomeView income={income} />}
+        {tab === "receitas" && <IncomeView income={income} onAdd={() => setShowAddIncome(true)} />}
         {tab === "investimentos" && <InvestmentView balance={balance} />}
         {tab === "analise" && <AnalysisView expenses={expenses} income={income} expectedIncome={expectedIncome} />}
 
         <footer>Fluxo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
       </section>
 
-      {(showAdd || editingExpense) && <div className="modal-backdrop" onMouseDown={(e) => { if (e.target !== e.currentTarget) return; setShowAdd(false); setEditingExpense(null); }}><div className="modal"><div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Ex.: passagem aérea"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Opcional"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="Opcional — ex.: 15/10"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button></div></div>}
+      {(showAdd || editingExpense || showAddIncome) && <div className="modal-backdrop" onMouseDown={(e) => { if (e.target !== e.currentTarget) return; setShowAdd(false); setShowAddIncome(false); setEditingExpense(null); }}><div className="modal">
+          {showAddIncome ? (
+            <>
+              <div className="modal-head"><div><p className="eyebrow">NOVA RECEITA</p><h2>Adicionar receita</h2></div><button className="close" onClick={() => setShowAddIncome(false)}>×</button></div>
+              <label>Descrição da receita<input value={newIncome.name} onChange={(e) => setNewIncome({...newIncome, name:e.target.value})} placeholder="Ex.: salário, freelance, aluguel recebido"/></label>
+              <label>Origem da receita<input value={newIncome.source} onChange={(e) => setNewIncome({...newIncome, source:e.target.value})} placeholder="Ex.: empresa, cliente ou pessoa"/></label>
+              <div className="form-grid"><label>Valor<input inputMode="decimal" value={newIncome.amount} onChange={(e) => setNewIncome({...newIncome, amount:e.target.value})} placeholder="0,00"/></label><label>Dia ou período<input value={newIncome.day} onChange={(e) => setNewIncome({...newIncome, day:e.target.value})} placeholder="Ex.: 13/10 ou 13–15/10"/></label></div>
+              <label>Confiabilidade<select value={newIncome.confidence} onChange={(e) => setNewIncome({...newIncome, confidence:e.target.value as Income["confidence"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
+              <button className="primary full" onClick={addIncome}>Adicionar receita</button>
+            </>
+          ) : (
+            <>
+              <div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Ex.: passagem aérea"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Opcional"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="Opcional — ex.: 15/10"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button>
+            </>
+          )}
+        </div></div>}
     </main>
   );
 }
@@ -272,8 +312,8 @@ function ExpenseView({ expenses, onToggle, onAdd, onEdit, onDelete }: { expenses
   return <section className="page-section"><div className="summary-strip"><div><span>Total planejado</span><strong>{money(total)}</strong></div><div><span>Pagos</span><strong>{expenses.filter(e=>e.status==="Pago").length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Todos os gastos</h2><p>Ordene suas decisões pela urgência e pelo impacto no saldo.</p></div><button className="primary small" onClick={onAdd}><Icon name="plus"/> Novo gasto</button></div><div className="table"><div className="table-head"><span>Despesa</span><span>Prazo</span><span>Urgência</span><span>Valor</span><span>Status</span><span>Ações</span></div>{[...expenses].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).map(e=><div className="table-row expense-table-row" key={e.id}><div><strong>{e.name}</strong><span>{e.category || "Sem categoria"}</span></div><span>{e.due || "Sem data"}</span><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong><button className={e.status==="Pago"?"status paid":"status"} onClick={()=>onToggle(e.id)}>{e.status}</button><div className="expense-actions"><button type="button" className="action-menu-button" aria-label={"Ações para " + e.name} onClick={()=>setOpenMenu(openMenu === e.id ? null : e.id)}>⋮</button>{openMenu === e.id && <div className="action-menu"><button type="button" onClick={()=>{setOpenMenu(null);onEdit(e)}}>Alterar</button><button type="button" className="delete-action" onClick={()=>{setOpenMenu(null);onDelete(e.id)}}>Excluir</button></div>}</div></div>)}</div></div></section>
 }
 
-function IncomeView({ income }: { income: Income[] }) {
-  return <section className="page-section"><div className="summary-strip"><div><span>Entradas estimadas</span><strong>{money(income.reduce((s,e)=>s+e.amount,0))}</strong></div><div><span>Maior entrada</span><strong>{money(Math.max(...income.map(e=>e.amount)))}</strong></div><div><span>Janela principal</span><strong>13–15/10</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Receitas futuras</h2><p>Registre intervalos quando a data exata ainda não for conhecida.</p></div><button className="text-button">+ Nova receita</button></div><div className="income-cards">{income.map(i=><div className="income-card" key={i.id}><div className="income-icon"><Icon name="arrow"/></div><div><strong>{i.name}</strong><span>Estimativa: {i.range}</span></div><strong>{money(i.amount)}</strong><span className={"confidence " + i.confidence.toLowerCase()}>{i.confidence} confiança</span></div>)}</div></div></section>;
+function IncomeView({ income, onAdd }: { income: Income[]; onAdd: () => void }) {
+  return <section className="page-section"><div className="summary-strip"><div><span>Entradas estimadas</span><strong>{money(income.reduce((s,e)=>s+e.amount,0))}</strong></div><div><span>Maior entrada</span><strong>{money(Math.max(...income.map(e=>e.amount)))}</strong></div><div><span>Receitas cadastradas</span><strong>{income.length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Receitas futuras</h2><p>Registre o dia ou período, o valor, a confiabilidade e a origem de cada receita.</p></div><button type="button" className="primary small" onClick={onAdd}><Icon name="plus"/> Nova receita</button></div><div className="income-cards">{income.map(i=><div className="income-card" key={i.id}><div className="income-icon"><Icon name="arrow"/></div><div><strong>{i.name}</strong><span>Origem: {i.source}</span><span>Recebimento: {i.range}</span></div><strong>{money(i.amount)}</strong><span className={"confidence " + i.confidence.toLowerCase()}>{i.confidence} confiança</span></div>)}</div></div></section>;
 }
 
 function InvestmentView({ balance }: { balance: number }) {
