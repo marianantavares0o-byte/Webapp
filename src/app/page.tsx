@@ -44,32 +44,19 @@ const money = (value: number) =>
 function NexoLogo({ compact = false }: { compact?: boolean }) {
   return (
     <div className={compact ? "nexo-logo compact" : "nexo-logo"} aria-label="Nexo">
-      <svg viewBox="0 0 64 52" className="nexo-logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 48 48" className="nexo-logo-mark" aria-hidden="true">
         <defs>
-          <linearGradient id="nexoA" x1="8" y1="45" x2="55" y2="7" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#35d6b0" />
-            <stop offset=".52" stopColor="#69d8cf" />
-            <stop offset="1" stopColor="#5da9ff" />
+          <linearGradient id="nexoMinimal" x1="7" y1="40" x2="41" y2="8" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#4fd1b5" />
+            <stop offset="1" stopColor="#67c7ff" />
           </linearGradient>
-          <linearGradient id="nexoB" x1="18" y1="5" x2="52" y2="45" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#a2fff0" />
-            <stop offset=".5" stopColor="#4fd1b5" />
-            <stop offset="1" stopColor="#287b9d" />
-          </linearGradient>
-          <filter id="nexoGlow" x="-40%" y="-40%" width="180%" height="180%">
-            <feGaussianBlur stdDeviation="2.2" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
         </defs>
-        <path d="M9 38C6 42 8 47 13 48c3 .6 6-.8 8.2-3.3L42 20.8c2.4-3 4.5-4.7 7.3-4.7 3.6 0 5.8 2.7 5.8 6.2 0 2.2-.8 4.2-2.4 6l-7 8.1c-2.3 2.7-2 6.6.7 8.8 2.6 2.1 6.4 1.8 8.6-.7l3.7-4.3c4-4.7 5.9-10 5.9-16 0-11.2-7.2-18.9-17.7-18.9-6.6 0-11.3 3.3-15.9 8.8L9 38Z" fill="url(#nexoA)" filter="url(#nexoGlow)" />
-        <path d="M55 14c-2.2-2.5-6-2.8-8.6-.7L29.1 34.2c-2.5 2.8-4.8 4.5-7.3 4.5-3.6 0-5.8-2.7-5.8-6.2 0-2.2.8-4.2 2.4-6l7-8.1c2.3-2.7 2-6.6-.7-8.8-2.6-2.1-6.4-1.8-8.6.7l-3.7 4.3c-4 4.7-5.9 10-5.9 16 0 11.2 7.2 18.9 17.7 18.9 6.6 0 11.3-3.3 15.9-8.8L55 14Z" fill="url(#nexoB)" opacity=".96" />
-        <path d="M18 7c3.2-1.7 7.1-.8 9.1 2.1l17.4 25.2c1.9 2.8 5.8 3.5 8.6 1.6l2.1-1.4-5.5 6.4c-2.2 2.5-6 2.8-8.6.7L23.8 19.8c-2.4-3.1-4.5-4.8-7.3-4.8-1.2 0-2.3.3-3.2.9L18 7Z" fill="#b8fff2" opacity=".34" />
+        <path d="M9 36V12c0-2.2 2.8-3.2 4.2-1.4l17.6 22V12c0-2.8 2.2-5 5-5h3v29c0 2.2-2.8 3.2-4.2 1.4L17 15.4V36c0 2.8-2.2 5-5 5H9V36Z" fill="url(#nexoMinimal)" />
       </svg>
       <span>Nexo</span>
     </div>
   );
 }
-
 function Icon({ name }: { name: string }) {
   const paths: Record<string, string> = {
     grid: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
