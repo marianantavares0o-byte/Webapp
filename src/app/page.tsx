@@ -152,7 +152,7 @@ export default function Home() {
 
   const nav = [
     ["visao", "Visão geral", "grid"],
-    ["gastos", "Gastos", "wallet"],
+    ["gastos", "Despesas", "wallet"],
     ["receitas", "Receitas", "arrow"],
     ["investimentos", "Investimentos", "trend"],
     ["analise", "Análise geral", "chart"]
@@ -319,7 +319,7 @@ function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expec
 
       <div className="analysis-kpis">
         <div><span>Recebimentos</span><strong>{money(weeklyIncome)}</strong><small>{period === "mensal" ? "estimados no mês" : "estimativa da semana"}</small></div>
-        <div><span>Gastos</span><strong>{money(weeklyExpenses)}</strong><small>{period === "mensal" ? "planejados no mês" : "estimativa da semana"}</small></div>
+        <div><span>Despesas</span><strong>{money(weeklyExpenses)}</strong><small>{period === "mensal" ? "planejados no mês" : "estimativa da semana"}</small></div>
         <div><span>Saldo operacional</span><strong>{money(weeklyBalance)}</strong><small>entradas menos gastos</small></div>
         <div><span>Investimentos</span><strong>{money(investmentGain)}</strong><small>ganho bruto projetado</small></div>
       </div>
@@ -339,7 +339,7 @@ function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expec
         </div>
 
         <div className="panel analysis-detail">
-          <div className="panel-heading"><div><h2>Gastos</h2><p>Composição, urgência e impacto sobre o dinheiro disponível.</p></div><Icon name="wallet"/></div>
+          <div className="panel-heading"><div><h2>Despesas</h2><p>Composição, urgência e impacto sobre o dinheiro disponível.</p></div><Icon name="wallet"/></div>
           <div className="analysis-detail-grid">
             <div><span>Total planejado</span><strong>{money(totalExpenses)}</strong><small>5 compromissos</small></div>
             <div><span>Alta urgência</span><strong>{money(highUrgency)}</strong><small>valor que deve ser protegido primeiro</small></div>
