@@ -168,3 +168,127 @@ footer{color:#9aa6b7}
 .analysis-conclusion{background:linear-gradient(135deg,#fff,#f7faf9);border-color:#dfeae6}.analysis-conclusion-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.analysis-conclusion-grid>div{padding:14px;border-radius:10px;background:#fff;border:1px solid #e8edf2}.analysis-conclusion-grid span{display:block;color:#8996a8;font-size:7px}.analysis-conclusion-grid strong{display:block;color:#263754;font-size:16px;margin:5px 0}.analysis-conclusion-grid p{font-size:8px;line-height:1.45}
 @media(max-width:900px){.analysis-sections{grid-template-columns:1fr}.analysis-kpis{grid-template-columns:1fr 1fr}.analysis-kpis>div:first-child{grid-column:span 2}.analysis-conclusion-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.analysis-hero{display:block;padding:22px}.analysis-hero h2{font-size:21px}.analysis-period-toggle{margin-top:16px;width:max-content}.analysis-kpis{grid-template-columns:1fr}.analysis-kpis>div:first-child{grid-column:auto}.analysis-detail-grid{grid-template-columns:1fr}.analysis-bars>div{grid-template-columns:58px 1fr 65px}.analysis-conclusion-grid{grid-template-columns:1fr}}
+
+
+/* Nexo — identidade visual dark */
+:root{
+  color-scheme:dark;
+  --nexo-bg:#070d13;
+  --nexo-surface:#0d151d;
+  --nexo-surface-2:#111d26;
+  --nexo-line:#1c2a35;
+  --nexo-text:#edf7f5;
+  --nexo-muted:#81929f;
+  --nexo-teal:#4fd1b5;
+  --nexo-cyan:#67c7ff;
+  --nexo-violet:#8b7cf6;
+  --nexo-coral:#ff8b7d;
+}
+html,body{
+  background:
+    radial-gradient(circle at 82% 3%,rgba(103,199,255,.09),transparent 24%),
+    radial-gradient(circle at 18% 88%,rgba(79,209,181,.07),transparent 26%),
+    var(--nexo-bg);
+  color:var(--nexo-text);
+}
+.app-shell{background:transparent}
+.sidebar{
+  background:linear-gradient(180deg,#071016 0%,#09151d 55%,#0d1921 100%);
+  border-right:1px solid #172630;
+  box-shadow:12px 0 40px rgba(0,0,0,.28);
+}
+.nexo-logo{display:flex;align-items:center;gap:9px;color:#f4fbfa;font-size:23px;font-weight:800;letter-spacing:-.7px}
+.nexo-logo-mark{width:35px;height:30px;display:block;overflow:visible;filter:drop-shadow(0 5px 9px rgba(79,209,181,.18))}
+.nexo-logo.compact .nexo-logo-mark{width:31px;height:27px}
+.brand{margin-bottom:30px}
+.profile{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.055)}
+.avatar{background:linear-gradient(135deg,#173c40,#183046);color:#a9f5e4;border:1px solid #27504e}
+.nav-item{color:#81929f}
+.nav-item:hover,.nav-item.active{background:linear-gradient(90deg,rgba(79,209,181,.13),rgba(103,199,255,.06));color:#f1fbf9}
+.nav-item.active{box-shadow:inset 2px 0 #4fd1b5}
+.sidebar-bottom{border-top-color:#1b2a34}
+.mini-card strong{color:#d7e7e6}
+.mini-card span{color:#6f828e}
+.content{color:var(--nexo-text)}
+.eyebrow{color:#6f858f}
+h1,h2{color:#edf7f5}
+p{color:var(--nexo-muted)}
+.panel,.balance-card,.metric-card,.summary-strip>div{
+  background:linear-gradient(145deg,rgba(15,25,33,.98),rgba(10,18,25,.98));
+  border-color:var(--nexo-line);
+  box-shadow:0 12px 34px rgba(0,0,0,.16);
+}
+.panel-heading>.icon{color:#66818b}
+.primary{
+  background:linear-gradient(135deg,#1a514d,#163d4c);
+  color:#ecfffb;
+  border:1px solid rgba(79,209,181,.16);
+  box-shadow:0 8px 22px rgba(0,0,0,.22);
+}
+.primary:hover{background:linear-gradient(135deg,#20635c,#1b4d60)}
+.icon-button{background:#0d171f;border-color:#21313c;color:#8ca2ad}
+.balance-card-modern{background:linear-gradient(135deg,#0e252a 0%,#103a3b 53%,#173b51 100%);border-color:#214b4d}
+.balance-card-modern:after{background:radial-gradient(circle,rgba(103,199,255,.22),transparent 65%)}
+.balance-caption{color:#a8bec2}
+.balance-meta{color:#8ea5ad}
+.balance-meta strong{color:#65ddc0}
+.progress{background:#20363c}.progress span{background:linear-gradient(90deg,#4fd1b5,#67c7ff)}
+.pill.positive{background:rgba(79,209,181,.12);color:#7ce8d0;border:1px solid rgba(79,209,181,.16)}
+.allocation-panel{background:linear-gradient(145deg,#0e171e,#0b131a)}
+.allocation-legend>div{color:#8498a4}.allocation-legend strong{color:#dcebe9}
+.donut-chart:before{background:#0d171f}
+.calendar-month-select,.calendar-nav{background:#0d171f;color:#dcebe9;border-color:#21313c}
+.calendar-nav:hover:not(:disabled){background:#14232c;border-color:#31505b}
+.calendar-day{background:#0d171f;border-color:#1b2b35}
+.calendar-day.muted{background:#0a1117}.calendar-day>strong{color:#afc1c7}.calendar-day.muted>strong{color:#53656f}
+.calendar-day.today{border-color:#4fd1b5;box-shadow:inset 0 0 0 1px #4fd1b5}
+.calendar-weekdays span{color:#637985}
+.calendar-event.payment{background:rgba(255,139,125,.11);color:#ff9e93}
+.calendar-event.income{background:rgba(79,209,181,.11);color:#70e1c5}
+.calendar-legend{color:#718692}
+.income-card,.commitment-card,.table-row{border-color:#1c2b35;background:rgba(13,22,29,.76)}
+.income-card:hover,.commitment-card:hover{border-color:#2a4651;background:#101d25;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.income-icon,.metric-icon,.spark{background:rgba(79,209,181,.09);color:#63d9bd}
+.income-card>div:nth-child(2) span,.row-main span,.commitment-main>span{color:#748894}
+.confidence.alta,.urgency.baixa{background:rgba(79,209,181,.10);color:#6fddc1}
+.confidence.média,.urgency.média{background:rgba(255,194,89,.10);color:#e8bd70}
+.confidence.baixa,.urgency.alta{background:rgba(255,139,125,.10);color:#ff9c91}
+.date-box{background:#14232c;color:#c4d6da}.date-box.danger{background:rgba(255,139,125,.10);color:#ff9c91}.date-box.medium{background:rgba(255,194,89,.10);color:#e8bd70}
+.commitment-alert{background:#0d171f;border:1px solid #1c2b35}
+.commitments-total{border-top-color:#22343e}.commitments-total span{color:#718591}.commitments-total strong{color:#d9eae8}
+.text-button{color:#83a0aa}
+.table-head{color:#667b87}
+.status{background:#101c24;border-color:#263742;color:#9fb0b7}.status.paid{background:rgba(79,209,181,.1);color:#70ddc3}
+.action-menu-button{background:#0e1820;border-color:#243641;color:#9eb1b8}.action-menu-button:hover{background:#15252e;border-color:#36505d;color:#dcecea}
+.action-menu{background:#0d171f;border-color:#243641;box-shadow:0 16px 36px rgba(0,0,0,.4)}.action-menu button{color:#c7d8dc}.action-menu button:hover{background:#15252e}
+.investment-result{background:linear-gradient(145deg,#0d2725,#0d1d25);border-color:#21463f}.investment-result span,.investment-result small{color:#7f9998}
+.recommendation-panel li{color:#8ca0aa}
+.big-number,.analysis-detail-grid>div,.quick-stat,.spending-note,.analysis-conclusion-grid>div{background:#0d171f;border-color:#1c2b35}
+.big-number span,.big-number small,.analysis-detail-grid span,.analysis-detail-grid small{color:#788c97}
+.big-number strong,.analysis-detail-grid strong,.analysis-conclusion-grid strong{color:#e2efed}
+.category-list>div{color:#82959f}.category-list strong{color:#c4d5d9}
+.line,.split-track,.score-track{background:#1b2b34}.line i,.score-track span{background:linear-gradient(90deg,#4fd1b5,#67c7ff)}
+.monthly-advice{background:#0d1d20;border-left-color:#4fd1b5}
+.analysis-hero,.analysis-header{background:linear-gradient(135deg,#09151d 0%,#0d2830 62%,#113c49 100%);box-shadow:0 18px 40px rgba(0,0,0,.25)}
+.analysis-kpis>div,.analysis-kpi{background:#0d171f;border-color:#1c2b35;box-shadow:none}
+.analysis-kpis>div:first-child,.analysis-kpi.featured{background:#0e2724;border-color:#21453e}
+.analysis-kpis strong,.analysis-kpi strong{color:#e2efed}
+.analysis-kpis>div:first-child strong,.analysis-kpi.featured strong{color:#68dec2}
+.analysis-period-toggle{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.08)}
+.analysis-period-toggle button.active{background:#dffcf5;color:#10252a}
+.cashflow-track,.analysis-bars>div>div{background:#182932}
+.cashflow-result div{background:#0e1921}.cashflow-result strong,.investment-analysis-row strong{color:#dcebea}
+.spending-ring:before{background:#0d171f}.spending-legend span,.spending-note span{color:#7e929c}.spending-legend strong,.spending-ring strong{color:#dcebea}
+.investment-analysis-highlight{background:linear-gradient(145deg,#0e2724,#0e1c25);border-color:#21453e}.investment-analysis-highlight span,.investment-analysis-highlight small{color:#7f9998}.investment-analysis-highlight strong{color:#dcebea}
+.analysis-conclusion{background:linear-gradient(135deg,#0d171f,#0c211f);border-color:#21433e}
+.reading-result{border-color:#263841}.analysis-reading{background:linear-gradient(135deg,#0d171f,#0d211f);border-color:#21433e}
+.reading-icon{background:rgba(79,209,181,.1);color:#65dabe}
+.reading-result strong{color:#67d9bd}
+.modal-backdrop{background:rgba(0,0,0,.72);backdrop-filter:blur(5px)}
+.modal{background:#0d171f;border-color:#263842;box-shadow:0 24px 80px rgba(0,0,0,.52)}
+.modal label{color:#91a4ae}.modal input,.modal select{background:#091219;color:#e5f1ef;border-color:#263842}.modal input::placeholder{color:#536772}.modal input:focus,.modal select:focus{border-color:#4fd1b5;box-shadow:0 0 0 3px rgba(79,209,181,.12)}
+.close{background:#15232c;color:#c8d8dc}
+footer{color:#5f737e}
+.auth-page{background:radial-gradient(circle at 20% 20%,rgba(79,209,181,.11),transparent 30%),radial-gradient(circle at 85% 15%,rgba(139,124,246,.10),transparent 28%),#070d13}
+.auth-card{background:#0d171f;border-color:#1c2c36;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+.auth-card h1{color:#edf7f5}.auth-form label{color:#91a4ae}.auth-form input{background:#091219;color:#e5f1ef;border-color:#263842}.auth-secondary{background:#0d171f;color:#c7d8dc;border-color:#263842}.auth-message{background:#0d171f;border-color:#263842}.auth-message strong{color:#dcebea}.auth-message p{color:#81929f}
