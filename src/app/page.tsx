@@ -62,7 +62,8 @@ export default function Home() {
   const [income] = useState(initialIncome);
   const [balance, setBalance] = useState(2450);
   const [showAdd, setShowAdd] = useState(false);
-  const [newExpense, setNewExpense] = useState({ name: "", amount: "", due: "", urgency: "Média" as Expense["urgency"] });
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [newExpense, setNewExpense] = useState({ name: "", category: "Outros", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
 
 
   const pending = expenses.filter((e) => e.status === "Pendente");
@@ -86,9 +87,41 @@ export default function Home() {
       ...current,
       { id: Date.now(), name: newExpense.name, category: "Outros", amount, due: newExpense.due, urgency: newExpense.urgency, status: "Pendente" }
     ]);
-    setNewExpense({ name: "", amount: "", due: "", urgency: "Média" });
+    setNewExpense({ name: "", category: "Outros", amount: "", due: "", urgency: "Média", status: "Pendente" });
     setShowAdd(false);
     setTab("gastos");
+  }
+
+  function startEditExpense(expense: Expense) {
+    setEditingExpense(expense);
+    setNewExpense({
+      name: expense.name,
+      category: expense.category,
+      amount: String(expense.amount).replace(".", ","),
+      due: expense.due,
+      urgency: expense.urgency,
+      status: expense.status
+    });
+  }
+
+  function saveEditedExpense() {
+    if (!editingExpense) return;
+    const amount = Number(newExpense.amount.replace(",", "."));
+    if (!newExpense.name.trim() || !amount || !newExpense.due.trim()) return;
+    setExpenses((current) => current.map((expense) =>
+      expense.id === editingExpense.id
+        ? { ...expense, name: newExpense.name.trim(), category: newExpense.category.trim() || "Outros", amount, due: newExpense.due.trim(), urgency: newExpense.urgency, status: newExpense.status }
+        : expense
+    ));
+    setEditingExpense(null);
+    setNewExpense({ name: "", category: "Outros", amount: "", due: "", urgency: "Média", status: "Pendente" });
+  }
+
+  function deleteExpense(id: number) {
+    const expense = expenses.find((item) => item.id === id);
+    if (!expense) return;
+    if (!window.confirm("Excluir a despesa \"" + expense.name + "\"? Esta ação não pode ser desfeita.")) return;
+    setExpenses((current) => current.filter((item) => item.id !== id));
   }
 
   function togglePaid(id: number) {
@@ -200,7 +233,7 @@ export default function Home() {
           </>
         )}
 
-        {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} />}
+        {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
         {tab === "receitas" && <IncomeView income={income} />}
         {tab === "investimentos" && <InvestmentView balance={balance} />}
         {tab === "analise" && <AnalysisView expenses={expenses} expectedIncome={expectedIncome} />}
@@ -208,14 +241,15 @@ export default function Home() {
         <footer>Fluxo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
       </section>
 
-      {showAdd && <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && setShowAdd(false)}><div className="modal"><div className="modal-head"><div><p className="eyebrow">NOVA DESPESA</p><h2>Adicionar gasto</h2></div><button className="close" onClick={() => setShowAdd(false)}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Ex.: passagem aérea"/></label><div className="form-grid"><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="DD/MM"/></label></div><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label><button className="primary full" onClick={addExpense}>Adicionar ao planejamento</button></div></div>}
+      {(showAdd || editingExpense) && <div className="modal-backdrop" onMouseDown={(e) => { if (e.target !== e.currentTarget) return; setShowAdd(false); setEditingExpense(null); }}><div className="modal"><div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Ex.: passagem aérea"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Ex.: Moradia"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="DD/MM"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button></div></div>}
     </main>
   );
 }
 
-function ExpenseView({ expenses, onToggle, onAdd }: { expenses: Expense[]; onToggle: (id:number)=>void; onAdd:()=>void }) {
+function ExpenseView({ expenses, onToggle, onAdd, onEdit, onDelete }: { expenses: Expense[]; onToggle: (id:number)=>void; onAdd:()=>void; onEdit:(expense: Expense)=>void; onDelete:(id:number)=>void }) {
+  const [openMenu, setOpenMenu] = useState<number | null>(null);
   const total = expenses.reduce((s,e)=>s+e.amount,0);
-  return <section className="page-section"><div className="summary-strip"><div><span>Total planejado</span><strong>{money(total)}</strong></div><div><span>Alta urgência</span><strong>{expenses.filter(e=>e.urgency==="Alta").length}</strong></div><div><span>Pagos</span><strong>{expenses.filter(e=>e.status==="Pago").length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Todos os gastos</h2><p>Ordene suas decisões pela urgência e pelo impacto no saldo.</p></div><button className="primary small" onClick={onAdd}><Icon name="plus"/> Novo gasto</button></div><div className="table"><div className="table-head"><span>Despesa</span><span>Prazo</span><span>Urgência</span><span>Valor</span><span>Status</span></div>{expenses.map(e=><div className="table-row" key={e.id}><div><strong>{e.name}</strong><span>{e.category}</span></div><span>{e.due}</span><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong><button className={e.status==="Pago"?"status paid":"status"} onClick={()=>onToggle(e.id)}>{e.status}</button></div>)}</div></div></section>
+  return <section className="page-section"><div className="summary-strip"><div><span>Total planejado</span><strong>{money(total)}</strong></div><div><span>Alta urgência</span><strong>{expenses.filter(e=>e.urgency==="Alta").length}</strong></div><div><span>Pagos</span><strong>{expenses.filter(e=>e.status==="Pago").length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Todos os gastos</h2><p>Ordene suas decisões pela urgência e pelo impacto no saldo.</p></div><button className="primary small" onClick={onAdd}><Icon name="plus"/> Novo gasto</button></div><div className="table"><div className="table-head"><span>Despesa</span><span>Prazo</span><span>Urgência</span><span>Valor</span><span>Status</span><span>Ações</span></div>{expenses.map(e=><div className="table-row expense-table-row" key={e.id}><div><strong>{e.name}</strong><span>{e.category}</span></div><span>{e.due}</span><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong><button className={e.status==="Pago"?"status paid":"status"} onClick={()=>onToggle(e.id)}>{e.status}</button><div className="expense-actions"><button type="button" className="action-menu-button" aria-label={"Ações para " + e.name} onClick={()=>setOpenMenu(openMenu === e.id ? null : e.id)}>⋮</button>{openMenu === e.id && <div className="action-menu"><button type="button" onClick={()=>{setOpenMenu(null);onEdit(e)}}>Alterar</button><button type="button" className="delete-action" onClick={()=>{setOpenMenu(null);onDelete(e.id)}}>Excluir</button></div>}</div></div>)}</div></div></section>
 }
 
 function IncomeView({ income }: { income: Income[] }) {
