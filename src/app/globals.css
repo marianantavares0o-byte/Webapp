@@ -292,3 +292,8 @@ footer{color:#5f737e}
 .auth-page{background:radial-gradient(circle at 20% 20%,rgba(79,209,181,.11),transparent 30%),radial-gradient(circle at 85% 15%,rgba(139,124,246,.10),transparent 28%),#070d13}
 .auth-card{background:#0d171f;border-color:#1c2c36;box-shadow:0 24px 70px rgba(0,0,0,.35)}
 .auth-card h1{color:#edf7f5}.auth-form label{color:#91a4ae}.auth-form input{background:#091219;color:#e5f1ef;border-color:#263842}.auth-secondary{background:#0d171f;color:#c7d8dc;border-color:#263842}.auth-message{background:#0d171f;border-color:#263842}.auth-message strong{color:#dcebea}.auth-message p{color:#81929f}
+
+/* Ajuste final da marca: símbolo N minimalista */
+.nexo-logo-mark{width:32px;height:32px;filter:none}
+.nexo-logo.compact .nexo-logo-mark{width:29px;height:29px}
+.nexo-logo span{letter-spacing:-.8px}
