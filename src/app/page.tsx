@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
 
@@ -60,9 +60,28 @@ export default function Home() {
   const [tab, setTab] = useState<Tab>("visao");
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income] = useState(initialIncome);
-  const [balance, setBalance] = useState(2450);
+  const [balance, setBalance] = useState(2450);\n  const [storageLoaded, setStorageLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  useEffect(() => {
+    try {
+      const savedExpenses = localStorage.getItem("fluxo-expenses");
+      const savedBalance = localStorage.getItem("fluxo-balance");
+      if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+      if (savedBalance) setBalance(Number(savedBalance));
+    } catch {
+      // Mantém os dados iniciais caso o armazenamento local esteja indisponível.
+    } finally {
+      setStorageLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageLoaded) return;
+    localStorage.setItem("fluxo-expenses", JSON.stringify(expenses));
+    localStorage.setItem("fluxo-balance", String(balance));
+  }, [expenses, balance, storageLoaded]);
+
   const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
 
 
@@ -189,7 +208,7 @@ export default function Home() {
                   <button className="text-button" onClick={() => setTab("gastos")}>Ver gastos <Icon name="chevron"/></button>
                 </div>
                 <div className="commitments-list">
-                  {[...pending].sort((a,b) => Number(a.due.split("/")[0]) - Number(b.due.split("/")[0])).map((e) => (
+                  {[...pending].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).map((e) => (
                     <div className="commitment-card" key={e.id}>
                       <div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}>
                         <strong>{e.due ? e.due.split("/")[0] : "—"}</strong><span>{e.due ? "OUT" : "SEM DATA"}</span>
@@ -249,7 +268,7 @@ export default function Home() {
 function ExpenseView({ expenses, onToggle, onAdd, onEdit, onDelete }: { expenses: Expense[]; onToggle: (id:number)=>void; onAdd:()=>void; onEdit:(expense: Expense)=>void; onDelete:(id:number)=>void }) {
   const [openMenu, setOpenMenu] = useState<number | null>(null);
   const total = expenses.reduce((s,e)=>s+e.amount,0);
-  return <section className="page-section"><div className="summary-strip"><div><span>Total planejado</span><strong>{money(total)}</strong></div><div><span>Alta urgência</span><strong>{expenses.filter(e=>e.urgency==="Alta").length}</strong></div><div><span>Pagos</span><strong>{expenses.filter(e=>e.status==="Pago").length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Todos os gastos</h2><p>Ordene suas decisões pela urgência e pelo impacto no saldo.</p></div><button className="primary small" onClick={onAdd}><Icon name="plus"/> Novo gasto</button></div><div className="table"><div className="table-head"><span>Despesa</span><span>Prazo</span><span>Urgência</span><span>Valor</span><span>Status</span><span>Ações</span></div>{expenses.map(e=><div className="table-row expense-table-row" key={e.id}><div><strong>{e.name}</strong><span>{e.category || "Sem categoria"}</span></div><span>{e.due || "Sem data"}</span><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong><button className={e.status==="Pago"?"status paid":"status"} onClick={()=>onToggle(e.id)}>{e.status}</button><div className="expense-actions"><button type="button" className="action-menu-button" aria-label={"Ações para " + e.name} onClick={()=>setOpenMenu(openMenu === e.id ? null : e.id)}>⋮</button>{openMenu === e.id && <div className="action-menu"><button type="button" onClick={()=>{setOpenMenu(null);onEdit(e)}}>Alterar</button><button type="button" className="delete-action" onClick={()=>{setOpenMenu(null);onDelete(e.id)}}>Excluir</button></div>}</div></div>)}</div></div></section>
+  return <section className="page-section"><div className="summary-strip"><div><span>Total planejado</span><strong>{money(total)}</strong></div><div><span>Alta urgência</span><strong>{expenses.filter(e=>e.urgency==="Alta").length}</strong></div><div><span>Pagos</span><strong>{expenses.filter(e=>e.status==="Pago").length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Todos os gastos</h2><p>Ordene suas decisões pela urgência e pelo impacto no saldo.</p></div><button className="primary small" onClick={onAdd}><Icon name="plus"/> Novo gasto</button></div><div className="table"><div className="table-head"><span>Despesa</span><span>Prazo</span><span>Urgência</span><span>Valor</span><span>Status</span><span>Ações</span></div>{[...expenses].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).map(e=><div className="table-row expense-table-row" key={e.id}><div><strong>{e.name}</strong><span>{e.category || "Sem categoria"}</span></div><span>{e.due || "Sem data"}</span><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong><button className={e.status==="Pago"?"status paid":"status"} onClick={()=>onToggle(e.id)}>{e.status}</button><div className="expense-actions"><button type="button" className="action-menu-button" aria-label={"Ações para " + e.name} onClick={()=>setOpenMenu(openMenu === e.id ? null : e.id)}>⋮</button>{openMenu === e.id && <div className="action-menu"><button type="button" onClick={()=>{setOpenMenu(null);onEdit(e)}}>Alterar</button><button type="button" className="delete-action" onClick={()=>{setOpenMenu(null);onDelete(e.id)}}>Excluir</button></div>}</div></div>)}</div></div></section>
 }
 
 function IncomeView({ income }: { income: Income[] }) {
