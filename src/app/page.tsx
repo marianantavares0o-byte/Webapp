@@ -256,7 +256,7 @@ export default function Home() {
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
         {tab === "receitas" && <IncomeView income={income} />}
         {tab === "investimentos" && <InvestmentView balance={balance} />}
-        {tab === "analise" && <AnalysisView expenses={expenses} expectedIncome={expectedIncome} />}
+        {tab === "analise" && <AnalysisView expenses={expenses} income={income} expectedIncome={expectedIncome} />}
 
         <footer>Fluxo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
       </section>
@@ -285,7 +285,7 @@ function InvestmentView({ balance }: { balance: number }) {
   return <section className="page-section"><div className="summary-strip"><div><span>Capital disponível hoje</span><strong>{money(balance)}</strong></div><div><span>Exemplo investido</span><strong>{money(principal)}</strong></div><div><span>Prazo estimado</span><strong>185 dias</strong></div></div><div className="grid-2"><div className="panel"><div className="panel-heading"><div><h2>Simulador de investimento</h2><p>Exemplo educacional de juros compostos.</p></div><Icon name="trend"/></div><div className="investment-result"><span>Valor projetado</span><strong>{money(gross)}</strong><small>Ganho bruto estimado: {money(gain)}</small></div><div className="formula"><span>Capital</span><b>{money(principal)}</b><span>Taxa anual</span><b>11,98% a.a.</b><span>Resgate</span><b>Após 185 dias</b></div></div><div className="panel recommendation-panel"><div className="panel-heading"><div><h2>Regra de segurança</h2><p>Investir não deve comprometer contas essenciais.</p></div></div><ul><li>Primeiro preserve despesas de alta urgência e uma reserva de liquidez.</li><li>Compare prazo, liquidez, risco, tributação e proteção do produto antes de investir.</li><li>O retorno mostrado é uma simulação; taxas reais e condições podem variar.</li></ul></div></div></section>;
 }
 
-function AnalysisView({ expenses, expectedIncome }: { expenses: Expense[]; expectedIncome:number }) {
+function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[]; income: Income[]; expectedIncome:number }) {
   const [period, setPeriod] = useState<"mensal" | "semanal">("mensal");
   const today = new Date();
   const weekStart = new Date(today);
