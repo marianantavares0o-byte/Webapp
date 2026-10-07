@@ -60,7 +60,8 @@ export default function Home() {
   const [tab, setTab] = useState<Tab>("visao");
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income] = useState(initialIncome);
-  const [balance, setBalance] = useState(2450);\n  const [storageLoaded, setStorageLoaded] = useState(false);
+  const [balance, setBalance] = useState(2450);
+  const [storageLoaded, setStorageLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   useEffect(() => {
