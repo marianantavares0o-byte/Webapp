@@ -119,3 +119,17 @@ footer{color:#9aa6b7}
 .calendar-nav:disabled{opacity:.35;cursor:not-allowed}
 .calendar-month-select{width:100%;height:34px;border:1px solid #e1e6ef;border-radius:8px;background:#fff;color:#253652;padding:0 10px;font-size:9px;font-weight:800;outline:none}
 .calendar-month-select:focus{border-color:#6a78e8;box-shadow:0 0 0 3px rgba(106,120,232,.12)}
+
+
+/* Gastos — ações por despesa */
+.table-head,.table-row{grid-template-columns:2fr .75fr .85fr .95fr .9fr 54px}
+.expense-table-row{position:relative}
+.expense-actions{position:relative;display:flex;justify-content:center}
+.action-menu-button{width:34px;height:34px;border:1px solid #e1e6ef;border-radius:8px;background:#fff;color:#68778b;font-size:18px;line-height:1;display:grid;place-items:center}
+.action-menu-button:hover{background:#f4f7fb;border-color:#cfd7e6;color:#243654}
+.action-menu{position:absolute;right:0;top:39px;z-index:8;min-width:125px;padding:5px;background:#fff;border:1px solid #dfe5ee;border-radius:9px;box-shadow:0 12px 30px rgba(25,42,76,.13)}
+.action-menu button{display:block;width:100%;border:0;background:transparent;text-align:left;padding:9px 10px;border-radius:6px;color:#33445d;font-size:9px;font-weight:700}
+.action-menu button:hover{background:#f3f6fb}
+.action-menu .delete-action{color:#c45d55}
+.action-menu .delete-action:hover{background:#fff1ef}
+@media(max-width:700px){.table-head,.table-row{grid-template-columns:2fr .75fr .85fr .95fr .9fr 54px}}
