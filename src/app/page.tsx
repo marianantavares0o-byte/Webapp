@@ -278,7 +278,7 @@ export default function Home() {
 
             <section className="panel financial-feedback">
               <div className="panel-heading">
-                <div><p className="eyebrow">FEEDBACK</p><h2>Feedback financeiro</h2></div>
+                <div><p className="eyebrow">FEEDBACK</p></div>
               </div>
               <div className="feedback-text">
                 <div className="feedback-section">
