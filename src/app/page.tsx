@@ -510,51 +510,75 @@ function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[
   );
 }
 function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
-  const [selectedMonth, setSelectedMonth] = useState(9);
-  const year = 2026;
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const today = new Date();
+    return today.getMonth();
+  });
+  const [selectedYear, setSelectedYear] = useState(() => {
+    const today = new Date();
+    return today.getFullYear();
+  });
   const months = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
   ];
-  const firstDay = new Date(Date.UTC(year, selectedMonth, 1)).getUTCDay();
-  const daysInMonth = new Date(Date.UTC(year, selectedMonth + 1, 0)).getUTCDate();
-  const previousMonthDays = new Date(Date.UTC(year, selectedMonth, 0)).getUTCDate();
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentDate(new Date()), 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
+  const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+  const previousMonthDays = new Date(selectedYear, selectedMonth, 0).getDate();
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
   const events: Record<number, { type: "payment" | "income"; label: string }[]> = {};
 
   expenses.forEach((expense) => {
-    const day = Number(expense.due.split("/")[0]);
-    if (selectedMonth === 9 && day >= 1 && day <= 31) {
+    const match = expense.due.match(/^(\\d{1,2})[\\/](\\d{1,2})/);
+    if (!match) return;
+    const day = Number(match[1]);
+    const month = Number(match[2]) - 1;
+    if (month === selectedMonth && day >= 1 && day <= daysInMonth) {
       if (!events[day]) events[day] = [];
       events[day].push({ type: "payment", label: expense.name });
     }
   });
 
   income.forEach((item) => {
-    const day = Number(item.range.split(/[–-]/)[0]);
-    if (selectedMonth === 9 && day >= 1 && day <= 31) {
+    const match = item.range.match(/^(\\d{1,2})[–-](?:\\d{1,2})[\\/](\\d{1,2})|^(\\d{1,2})[\\/](\\d{1,2})/);
+    if (!match) return;
+    const day = Number(match[1] || match[3]);
+    const month = Number(match[2] || match[4]) - 1;
+    if (month === selectedMonth && day >= 1 && day <= daysInMonth) {
       if (!events[day]) events[day] = [];
       events[day].push({ type: "income", label: item.name });
     }
   });
 
   function changeMonth(delta: number) {
-    setSelectedMonth((current) => Math.min(11, Math.max(0, current + delta)));
+    const next = new Date(selectedYear, selectedMonth + delta, 1);
+    setSelectedMonth(next.getMonth());
+    setSelectedYear(next.getFullYear());
   }
+
+  const isViewingCurrentMonth =
+    selectedMonth === currentDate.getMonth() && selectedYear === currentDate.getFullYear();
 
   return (
     <div className="financial-calendar">
       <div className="calendar-controls">
-        <button type="button" className="calendar-nav" onClick={() => changeMonth(-1)} disabled={selectedMonth === 0} aria-label="Mês anterior">‹</button>
+        <button type="button" className="calendar-nav" onClick={() => changeMonth(-1)} aria-label="Mês anterior">‹</button>
         <select
           className="calendar-month-select"
           value={selectedMonth}
           onChange={(event) => setSelectedMonth(Number(event.target.value))}
           aria-label="Escolher mês"
         >
-          {months.map((month, index) => <option value={index} key={month}>{month} {year}</option>)}
+          {months.map((month, index) => <option value={index} key={month}>{month} {selectedYear}</option>)}
         </select>
-        <button type="button" className="calendar-nav" onClick={() => changeMonth(1)} disabled={selectedMonth === 11} aria-label="Próximo mês">›</button>
+        <button type="button" className="calendar-nav" onClick={() => changeMonth(1)} aria-label="Próximo mês">›</button>
       </div>
 
       <div className="calendar-weekdays">
@@ -571,7 +595,7 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
               ? dayNumber - daysInMonth
               : dayNumber;
           const dayEvents = inMonth ? (events[dayNumber] || []) : [];
-          const isToday = selectedMonth === 9 && dayNumber === 5;
+          const isToday = isViewingCurrentMonth && dayNumber === currentDate.getDate();
 
           return (
             <div className={"calendar-day " + (!inMonth ? "muted " : "") + (isToday ? "today" : "")} key={index}>
