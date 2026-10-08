@@ -108,11 +108,44 @@ footer{color:#9aa6b7}
 @media(max-width:700px){.financial-feedback{padding:18px}.feedback-metrics{grid-template-columns:1fr}.feedback-status{display:none}}
 
 
-/* Feedback — texto contínuo + indicadores em azul profundo */
-.feedback-text{display:grid;gap:17px}.feedback-section{padding-bottom:15px;border-bottom:1px solid #e8ecf2}.feedback-section:last-child{border-bottom:0;padding-bottom:0}.feedback-section strong{display:block;font-size:16px;line-height:1.5;color:#253652}.feedback-section p{font-size:14px;color:#718096;line-height:1.65;margin-top:8px;max-width:920px}.feedback-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}.feedback-metrics>div{border:1px solid rgba(79,209,181,.12);border-radius:12px;padding:15px 16px;background:linear-gradient(145deg,#0f292b,#112f3b);box-shadow:0 8px 18px rgba(0,0,0,.18);position:relative;overflow:hidden}.feedback-metrics>div:nth-child(2){background:linear-gradient(145deg,#10252f,#123743);border-color:rgba(103,199,255,.14)}.feedback-metrics>div:nth-child(3){background:linear-gradient(145deg,#102c2b,#16373a);border-color:rgba(79,209,181,.16)}.feedback-metrics span,.feedback-metrics small{display:block;color:#aebbd0;font-size:8px}.feedback-metrics strong{display:block;font-size:21px;margin:7px 0 4px;color:#fff;letter-spacing:-.3px}.feedback-metrics small{color:#8f9fba;line-height:1.4}.feedback-next-step{margin-top:14px}
-@media(max-width:700px){.feedback-metrics{grid-template-columns:1fr}.feedback-section p{max-width:none}}
+/* Feedback — identidade visual Nexo */
+.financial-feedback{
+  margin-bottom:16px;
+  background:linear-gradient(145deg,#0d151d 0%,#101c25 68%,#10242a 100%);
+  border:1px solid #1c2a35;
+  color:#edf7f5;
+  padding:23px;
+}
+.financial-feedback .panel-heading{align-items:flex-start;margin-bottom:18px}
+.financial-feedback .eyebrow{color:#4fd1b5;font-size:10px;letter-spacing:1.4px}
+.feedback-text{display:grid;gap:17px}
+.feedback-section{padding-bottom:17px;border-bottom:1px solid #1c2a35}
+.feedback-section strong{display:block;font-size:19px;line-height:1.5;color:#edf7f5;letter-spacing:-.15px}
+.feedback-section p{font-size:15px;color:#a9b9c5;line-height:1.7;margin-top:9px;max-width:920px}
+.feedback-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:18px}
+.feedback-metrics>div{
+  border:1px solid rgba(79,209,181,.16);
+  border-radius:12px;
+  padding:16px;
+  background:linear-gradient(145deg,#0f292b,#112f3b);
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+  position:relative;
+  overflow:hidden;
+}
+.feedback-metrics>div:nth-child(2){background:linear-gradient(145deg,#10252f,#123743);border-color:rgba(103,199,255,.18)}
+.feedback-metrics>div:nth-child(3){background:linear-gradient(145deg,#102c2b,#16373a);border-color:rgba(79,209,181,.18)}
+.feedback-metrics span{display:block;color:#c1d0d9;font-size:10px;font-weight:700}
+.feedback-metrics strong{display:block;font-size:23px;margin:7px 0 4px;color:#fff;letter-spacing:-.3px}
+.feedback-metrics small{display:block;color:#8fa3b1;font-size:10px;line-height:1.45}
+@media(max-width:700px){
+  .financial-feedback{padding:18px}
+  .feedback-section strong{font-size:17px}
+  .feedback-section p{font-size:14px;max-width:none}
+  .feedback-metrics{grid-template-columns:1fr}
+}
 
 /* Calendário — navegação por mês */
+
 .calendar-controls{display:grid;grid-template-columns:36px 1fr 36px;gap:8px;align-items:center;margin-bottom:10px}
 .calendar-nav{height:34px;border:1px solid #e1e6ef;border-radius:8px;background:#fff;color:#53627a;font-size:19px;line-height:1;display:grid;place-items:center}
 .calendar-nav:hover:not(:disabled){background:#f3f6fb;border-color:#cfd7e6}
