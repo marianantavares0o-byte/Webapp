@@ -272,7 +272,7 @@ export default function Home() {
 
               <div className="panel calendar-panel">
                 <div className="panel-heading"><div><h2>Calendário financeiro</h2><p>Escolha o mês para visualizar pagamentos e recebimentos previstos.</p></div></div>
-                <FinancialCalendar expenses={expenses} income={income}/>
+                <FinancialCalendar expenses={expenses} income={income} onAddExpense={(due) => { setNewExpense((current) => ({ ...current, due })); setShowAdd(true); }} onAddIncome={(day) => { setNewIncome((current) => ({ ...current, day })); setShowAddIncome(true); }} />
               </div>
             </section>
 
@@ -509,7 +509,17 @@ function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[
     </section>
   );
 }
-function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
+function FinancialCalendar({
+  expenses,
+  income,
+  onAddExpense,
+  onAddIncome
+}: {
+  expenses: Expense[];
+  income: Income[];
+  onAddExpense: (due: string) => void;
+  onAddIncome: (day: string) => void;
+}) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const today = new Date();
@@ -519,6 +529,7 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
     const today = new Date();
     return today.getFullYear();
   });
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const months = [
     "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
     "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
@@ -533,7 +544,7 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const previousMonthDays = new Date(selectedYear, selectedMonth, 0).getDate();
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-  const events: Record<number, { type: "payment" | "income"; label: string }[]> = {};
+  const events: Record<number, { type: "payment" | "income"; label: string; amount: number; detail: string }[]> = {};
 
   expenses.forEach((expense) => {
     const match = expense.due.match(/^(\\d{1,2})[\\/](\\d{1,2})/);
@@ -542,7 +553,12 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
     const month = Number(match[2]) - 1;
     if (month === selectedMonth && day >= 1 && day <= daysInMonth) {
       if (!events[day]) events[day] = [];
-      events[day].push({ type: "payment", label: expense.name });
+      events[day].push({
+        type: "payment",
+        label: expense.name,
+        amount: expense.amount,
+        detail: (expense.category || "Despesa") + " · " + expense.urgency + " urgência"
+      });
     }
   });
 
@@ -553,7 +569,12 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
     const month = Number(match[2] || match[4]) - 1;
     if (month === selectedMonth && day >= 1 && day <= daysInMonth) {
       if (!events[day]) events[day] = [];
-      events[day].push({ type: "income", label: item.name });
+      events[day].push({
+        type: "income",
+        label: item.name,
+        amount: item.amount,
+        detail: (item.source || "Receita") + " · confiança " + item.confidence
+      });
     }
   });
 
@@ -561,10 +582,25 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
     const next = new Date(selectedYear, selectedMonth + delta, 1);
     setSelectedMonth(next.getMonth());
     setSelectedYear(next.getFullYear());
+    setSelectedDay(null);
+  }
+
+  function selectMonth(month: number) {
+    setSelectedMonth(month);
+    setSelectedDay(null);
   }
 
   const isViewingCurrentMonth =
     selectedMonth === currentDate.getMonth() && selectedYear === currentDate.getFullYear();
+
+  const selectedEvents = selectedDay ? (events[selectedDay] || []) : [];
+  const selectedDateLabel = selectedDay
+    ? new Date(selectedYear, selectedMonth, selectedDay).toLocaleDateString("pt-BR", { day: "numeric", month: "long" })
+    : "";
+
+  const selectedDateValue = selectedDay
+    ? String(selectedDay).padStart(2, "0") + "/" + String(selectedMonth + 1).padStart(2, "0")
+    : "";
 
   return (
     <div className="financial-calendar">
@@ -573,7 +609,7 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
         <select
           className="calendar-month-select"
           value={selectedMonth}
-          onChange={(event) => setSelectedMonth(Number(event.target.value))}
+          onChange={(event) => selectMonth(Number(event.target.value))}
           aria-label="Escolher mês"
         >
           {months.map((month, index) => <option value={index} key={month}>{month} {selectedYear}</option>)}
@@ -596,23 +632,67 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
               : dayNumber;
           const dayEvents = inMonth ? (events[dayNumber] || []) : [];
           const isToday = isViewingCurrentMonth && dayNumber === currentDate.getDate();
+          const isSelected = inMonth && selectedDay === dayNumber;
 
           return (
-            <div className={"calendar-day " + (!inMonth ? "muted " : "") + (isToday ? "today" : "")} key={index}>
+            <button
+              type="button"
+              className={"calendar-day " + (!inMonth ? "muted " : "") + (isToday ? "today " : "") + (isSelected ? "selected" : "")}
+              key={index}
+              disabled={!inMonth}
+              onClick={() => inMonth && setSelectedDay(dayNumber)}
+              aria-label={inMonth ? "Abrir detalhes do dia " + displayDay : undefined}
+            >
               <strong>{displayDay}</strong>
               {dayEvents.slice(0, 2).map((event, eventIndex) => (
                 <span key={event.type + event.label + eventIndex} className={"calendar-event " + event.type}>
                   {event.type === "income" ? "↑ " : "↓ "}{event.label}
                 </span>
               ))}
-            </div>
+              {dayEvents.length > 2 && <small className="calendar-more-events">+{dayEvents.length - 2} eventos</small>}
+            </button>
           );
         })}
       </div>
 
+      {selectedDay && (
+        <div className="calendar-day-details">
+          <div className="calendar-day-details-head">
+            <div>
+              <p className="eyebrow">DIA SELECIONADO</p>
+              <h3>{selectedDateLabel}</h3>
+            </div>
+            <button type="button" className="calendar-close-day" onClick={() => setSelectedDay(null)} aria-label="Fechar detalhes">×</button>
+          </div>
+
+          {selectedEvents.length ? (
+            <div className="calendar-events-list">
+              {selectedEvents.map((event, index) => (
+                <div className={"calendar-detail-item " + event.type} key={event.type + event.label + index}>
+                  <div className="calendar-detail-icon">{event.type === "income" ? "↑" : "↓"}</div>
+                  <div className="calendar-detail-main">
+                    <strong>{event.label}</strong>
+                    <span>{event.detail}</span>
+                  </div>
+                  <strong className="calendar-detail-amount">{money(event.amount)}</strong>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="calendar-empty-day">Nenhum pagamento ou recebimento registrado para este dia.</p>
+          )}
+
+          <div className="calendar-day-actions">
+            <button type="button" className="calendar-add-button expense" onClick={() => onAddExpense(selectedDateValue)}>+ Adicionar despesa</button>
+            <button type="button" className="calendar-add-button income" onClick={() => onAddIncome(selectedDateValue)}>+ Adicionar recebimento</button>
+          </div>
+        </div>
+      )}
+
       <div className="calendar-legend">
         <span><i className="dot income-dot" /> Recebimento</span>
         <span><i className="dot expense-dot" /> Pagamento</span>
+        <span>Selecione um dia para ver os detalhes</span>
       </div>
     </div>
   );
