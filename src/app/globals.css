@@ -330,3 +330,115 @@ footer{color:#5f737e}
 .nexo-logo-mark{width:32px;height:32px;filter:none}
 .nexo-logo.compact .nexo-logo-mark{width:29px;height:29px}
 .nexo-logo span{letter-spacing:-.8px}
+
+/* Calendário interativo — detalhes por dia */
+.calendar-day{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  width:100%;
+  min-height:86px;
+  padding:8px;
+  text-align:left;
+  font:inherit;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+.calendar-day:hover:not(:disabled){
+  transform:translateY(-1px);
+  border-color:#31505b;
+  background:#12212a;
+}
+.calendar-day.selected{
+  border-color:#4fd1b5;
+  box-shadow:inset 0 0 0 1px rgba(79,209,181,.45),0 7px 18px rgba(0,0,0,.16);
+  background:#10242a;
+}
+.calendar-day:disabled{cursor:default}
+.calendar-day>strong{margin-bottom:5px}
+.calendar-more-events{
+  display:block;
+  margin-top:2px;
+  color:#708691;
+  font-size:8px;
+  font-weight:700;
+}
+.calendar-day-details{
+  margin-top:12px;
+  padding:15px;
+  border:1px solid #1c2f38;
+  border-radius:13px;
+  background:linear-gradient(145deg,#0d1a22,#0f2429);
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+.calendar-day-details-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:11px;
+}
+.calendar-day-details-head .eyebrow{margin:0 0 3px;color:#4fd1b5;font-size:8px}
+.calendar-day-details-head h3{margin:0;color:#edf7f5;font-size:14px}
+.calendar-close-day{
+  width:27px;
+  height:27px;
+  border:1px solid #263a43;
+  border-radius:8px;
+  background:#13232b;
+  color:#9fb2ba;
+  cursor:pointer;
+  font-size:17px;
+  line-height:1;
+}
+.calendar-events-list{display:grid;gap:7px}
+.calendar-detail-item{
+  display:grid;
+  grid-template-columns:28px 1fr auto;
+  align-items:center;
+  gap:9px;
+  padding:9px 10px;
+  border:1px solid #1d3039;
+  border-radius:9px;
+  background:#0a151c;
+}
+.calendar-detail-icon{
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  font-weight:900;
+}
+.calendar-detail-item.payment .calendar-detail-icon{background:rgba(255,139,125,.1);color:#ff9c91}
+.calendar-detail-item.income .calendar-detail-icon{background:rgba(79,209,181,.1);color:#70ddc3}
+.calendar-detail-main strong,.calendar-detail-main span{display:block}
+.calendar-detail-main strong{color:#dcebea;font-size:9px}
+.calendar-detail-main span{color:#748a95;font-size:7.5px;margin-top:2px}
+.calendar-detail-amount{font-size:9px;color:#e2efed}
+.calendar-detail-item.income .calendar-detail-amount{color:#70ddc3}
+.calendar-detail-item.payment .calendar-detail-amount{color:#ff9c91}
+.calendar-empty-day{margin:4px 0 12px;color:#788e99;font-size:8px}
+.calendar-day-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:11px}
+.calendar-add-button{
+  border:1px solid #263b44;
+  border-radius:8px;
+  padding:9px 10px;
+  background:#111f27;
+  color:#cfe0df;
+  font-size:8px;
+  font-weight:800;
+  cursor:pointer;
+}
+.calendar-add-button:hover{background:#172a33;border-color:#3a5660}
+.calendar-add-button.expense{color:#ffafa6;border-color:rgba(255,139,125,.2)}
+.calendar-add-button.income{color:#75e0c5;border-color:rgba(79,209,181,.2)}
+.calendar-legend{flex-wrap:wrap;gap:10px}
+@media(max-width:700px){
+  .calendar-day{min-height:74px;padding:6px}
+  .calendar-event{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .calendar-day-actions{grid-template-columns:1fr}
+  .calendar-detail-item{grid-template-columns:28px 1fr}
+  .calendar-detail-amount{grid-column:2}
+}
