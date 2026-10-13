@@ -387,13 +387,155 @@ function IncomeView({ income, onAdd, onEdit, onDelete }: { income: Income[]; onA
   </section>;
 }
 
+type InvestmentSimulation = {
+  id: number;
+  name: string;
+  capital: number;
+  annualRate: number;
+  liquidity: "imediata" | "vencimento";
+  targetDate: string;
+  days: number;
+  projectedValue: number;
+  estimatedGain: number;
+};
+
+function localDateString(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
 function InvestmentView({ balance }: { balance: number }) {
-  const principal = 500;
-  const annual = 0.1198;
-  const days = 185;
-  const gross = principal * Math.pow(1 + annual, days/365);
-  const gain = gross - principal;
-  return <section className="page-section"><div className="summary-strip"><div><span>Capital disponível hoje</span><strong>{money(balance)}</strong></div><div><span>Exemplo investido</span><strong>{money(principal)}</strong></div><div><span>Prazo estimado</span><strong>185 dias</strong></div></div><div className="grid-2"><div className="panel"><div className="panel-heading"><div><h2>Simulador de investimento</h2><p>Exemplo educacional de juros compostos.</p></div><Icon name="trend"/></div><div className="investment-result"><span>Valor projetado</span><strong>{money(gross)}</strong><small>Ganho bruto estimado: {money(gain)}</small></div><div className="formula"><span>Capital</span><b>{money(principal)}</b><span>Taxa anual</span><b>11,98% a.a.</b><span>Resgate</span><b>Após 185 dias</b></div></div><div className="panel recommendation-panel"><div className="panel-heading"><div><h2>Regra de segurança</h2><p>Investir não deve comprometer contas essenciais.</p></div></div><ul><li>Primeiro preserve despesas de alta urgência e uma reserva de liquidez.</li><li>Compare prazo, liquidez, risco, tributação e proteção do produto antes de investir.</li><li>O retorno mostrado é uma simulação; taxas reais e condições podem variar.</li></ul></div></div></section>;
+  const [name, setName] = useState("");
+  const [capital, setCapital] = useState("500");
+  const [annualRate, setAnnualRate] = useState("11,98");
+  const [liquidity, setLiquidity] = useState<"imediata" | "vencimento">("imediata");
+  const [targetDate, setTargetDate] = useState(() => {
+    const date = new Date();
+    date.setFullYear(date.getFullYear() + 1);
+    return localDateString(date);
+  });
+  const [savedSimulations, setSavedSimulations] = useState<InvestmentSimulation[]>([]);
+  const [storageLoaded, setStorageLoaded] = useState(false);
+  const today = localDateString(new Date());
+  const capitalValue = Number(capital.replace(",", "."));
+  const rateValue = Number(annualRate.replace(",", "."));
+  const target = targetDate ? new Date(targetDate + "T12:00:00") : null;
+  const startDate = new Date(today + "T12:00:00");
+  const days = target && !Number.isNaN(target.getTime())
+    ? Math.max(0, Math.ceil((target.getTime() - startDate.getTime()) / 86400000))
+    : 0;
+  const validInputs = name.trim().length > 0 && Number.isFinite(capitalValue) && capitalValue > 0 &&
+    Number.isFinite(rateValue) && rateValue >= 0 && rateValue <= 100 && !!targetDate && targetDate >= today;
+  const projectedValue = validInputs ? capitalValue * Math.pow(1 + rateValue / 100, days / 365) : 0;
+  const estimatedGain = projectedValue - capitalValue;
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("fluxo-investment-simulations");
+      if (saved) setSavedSimulations(JSON.parse(saved));
+    } catch {
+      // Mantém a lista vazia se o armazenamento local estiver indisponível.
+    } finally {
+      setStorageLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageLoaded) return;
+    localStorage.setItem("fluxo-investment-simulations", JSON.stringify(savedSimulations));
+  }, [savedSimulations, storageLoaded]);
+
+  function saveSimulation() {
+    if (!validInputs) return;
+    setSavedSimulations((current) => [{
+      id: Date.now(),
+      name: name.trim(),
+      capital: capitalValue,
+      annualRate: rateValue,
+      liquidity,
+      targetDate,
+      days,
+      projectedValue,
+      estimatedGain
+    }, ...current]);
+  }
+
+  function removeSimulation(id: number) {
+    setSavedSimulations((current) => current.filter((item) => item.id !== id));
+  }
+
+  return <section className="page-section investment-page">
+    <div className="summary-strip">
+      <div><span>Capital disponível hoje</span><strong>{money(balance)}</strong></div>
+      <div><span>Simulações salvas</span><strong>{savedSimulations.length}</strong></div>
+      <div><span>Prazo desta simulação</span><strong>{days} {days === 1 ? "dia" : "dias"}</strong></div>
+    </div>
+    <div className="grid-2 investment-layout">
+      <div className="panel investment-simulator-panel">
+        <div className="panel-heading"><div><h2>Simulador de investimento</h2><p>Informe os dados do investimento para projetar o rendimento bruto até a data escolhida.</p></div><Icon name="trend"/></div>
+        <div className="investment-form">
+          <label>Nome do investimento
+            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: LCI Banco X, CDB, Tesouro..." maxLength={80}/>
+          </label>
+          <div className="form-grid">
+            <label>Capital aplicado (R$)
+              <input inputMode="decimal" value={capital} onChange={(event) => setCapital(event.target.value)} placeholder="500,00"/>
+            </label>
+            <label>Taxa anual (% a.a.)
+              <input inputMode="decimal" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} placeholder="11,98"/>
+            </label>
+          </div>
+          <label>Tipo de resgate
+            <select value={liquidity} onChange={(event) => setLiquidity(event.target.value as "imediata" | "vencimento")}>
+              <option value="imediata">Liquidez imediata (posso resgatar antes)</option>
+              <option value="vencimento">Resgate no vencimento (data definida)</option>
+            </select>
+          </label>
+          <label>{liquidity === "imediata" ? "Simular mantendo aplicado até" : "Data prevista para o resgate"}
+            <input type="date" min={today} value={targetDate} onChange={(event) => setTargetDate(event.target.value)}/>
+          </label>
+          {liquidity === "imediata" && <p className="investment-helper">Mesmo com liquidez imediata, o cálculo estima quanto poderia acumular se você optar por não resgatar até a data escolhida.</p>}
+          {!validInputs && <p className="investment-validation">Informe o nome, um capital maior que zero, uma taxa entre 0% e 100% e uma data de hoje em diante.</p>}
+        </div>
+        <div className="investment-result">
+          <span>Montante bruto estimado em {targetDate ? new Date(targetDate + "T12:00:00").toLocaleDateString("pt-BR") : "—"}</span>
+          <strong>{validInputs ? money(projectedValue) : "—"}</strong>
+          <small>Rendimento estimado: {validInputs ? money(estimatedGain) : "—"} · {days} {days === 1 ? "dia" : "dias"} de aplicação</small>
+        </div>
+        <div className="formula">
+          <span>Capital inicial</span><b>{validInputs ? money(capitalValue) : "—"}</b>
+          <span>Taxa informada</span><b>{Number.isFinite(rateValue) && rateValue >= 0 ? rateValue.toLocaleString("pt-BR", { maximumFractionDigits: 4 }) + "% a.a." : "—"}</b>
+          <span>Resgate</span><b>{liquidity === "imediata" ? "Flexível" : "No vencimento"}</b>
+          <span>Data de projeção</span><b>{targetDate ? new Date(targetDate + "T12:00:00").toLocaleDateString("pt-BR") : "—"}</b>
+        </div>
+        <button type="button" className="primary full investment-save-button" onClick={saveSimulation} disabled={!validInputs}>Salvar simulação</button>
+        <p className="investment-disclaimer">Estimativa matemática com juros compostos e taxa anual constante, calculada proporcionalmente aos dias (base de 365 dias). Valor bruto: não desconta IR, IOF, tarifas, inflação ou regras específicas do produto. Não é garantia de rentabilidade.</p>
+      </div>
+      <div className="panel recommendation-panel">
+        <div className="panel-heading"><div><h2>Como interpretar</h2><p>Use os dados do produto financeiro real.</p></div></div>
+        <ul>
+          <li>Informe a taxa anual oferecida pelo investimento e o capital que pretende aplicar.</li>
+          <li>Com liquidez imediata, escolha uma data futura para estimar quanto poderia acumular se mantiver o dinheiro investido até lá.</li>
+          <li>Em resgates no vencimento, selecione a data prevista no contrato.</li>
+          <li>Compare liquidez, risco, tributação, carência e eventuais condições de resgate antes de decidir.</li>
+        </ul>
+      </div>
+    </div>
+    <div className="panel saved-investments-panel">
+      <div className="panel-heading"><div><h2>Simulações salvas</h2><p>Ficam guardadas neste navegador para você consultar e comparar depois.</p></div></div>
+      {savedSimulations.length === 0 ? <div className="investment-empty">Nenhuma simulação salva. Preencha os dados acima e selecione “Salvar simulação”.</div> :
+        <div className="saved-investment-list">{savedSimulations.map((item) => <div className="saved-investment-row" key={item.id}>
+          <div className="saved-investment-name"><strong>{item.name}</strong><span>{item.liquidity === "imediata" ? "Liquidez imediata" : "Resgate no vencimento"} · até {new Date(item.targetDate + "T12:00:00").toLocaleDateString("pt-BR")}</span></div>
+          <div><span>Capital</span><strong>{money(item.capital)}</strong></div>
+          <div><span>Taxa anual</span><strong>{item.annualRate.toLocaleString("pt-BR", { maximumFractionDigits: 4 })}%</strong></div>
+          <div><span>Rendimento bruto</span><strong className="saved-investment-gain">{money(item.estimatedGain)}</strong></div>
+          <div><span>Montante projetado</span><strong>{money(item.projectedValue)}</strong></div>
+          <button type="button" className="saved-investment-delete" onClick={() => removeSimulation(item.id)} aria-label={"Excluir simulação de " + item.name}>Excluir</button>
+        </div>)}</div>}
+    </div>
+  </section>;
 }
 
 function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[]; income: Income[]; expectedIncome:number }) {
