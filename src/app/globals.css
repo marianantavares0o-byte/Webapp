@@ -505,3 +505,23 @@ footer{color:#5f737e}
 .financial-calendar .calendar-empty-day{background:#0d171f;border:1px solid #21313c;border-radius:10px;padding:13px;color:#afc1c7}
 .financial-calendar .calendar-empty-day strong{color:#dcebe9}
 @media(max-width:700px){.financial-calendar .calendar-day-details{padding:10px}}
+
+
+/* Count of registered expenses beside the section title */
+.expense-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  margin-left: 0.35rem;
+  padding: 0 0.4rem;
+  border: 1px solid rgba(103, 199, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(79, 209, 181, 0.12);
+  color: #67c7ff;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
