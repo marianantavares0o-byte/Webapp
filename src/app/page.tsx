@@ -104,7 +104,7 @@ export default function Home() {
     localStorage.setItem("fluxo-expenses", JSON.stringify(expenses));
     localStorage.setItem("fluxo-income", JSON.stringify(income));
     localStorage.setItem("fluxo-balance", String(balance));
-  }, [expenses, balance, storageLoaded]);
+  }, [expenses, income, balance, storageLoaded]);
 
   const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
   const [newIncome, setNewIncome] = useState({ name: "", source: "", amount: "", day: "", confidence: "Média" as Income["confidence"] });
