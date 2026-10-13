@@ -570,11 +570,9 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
       <div className="calendar-controls">
         <button type="button" className="calendar-nav" onClick={() => changeMonth(-1)} aria-label="Mês anterior">‹</button>
         <div className="calendar-selects">
+          <span className="calendar-year-label">{selectedYear}</span>
           <select className="calendar-month-select" value={selectedMonth} onChange={(event) => { setSelectedMonth(Number(event.target.value)); setSelectedDay(null); }} aria-label="Escolher mês">
             {months.map((month, index) => <option value={index} key={month}>{month}</option>)}
-          </select>
-          <select className="calendar-month-select calendar-year-select" value={selectedYear} onChange={(event) => { setSelectedYear(Number(event.target.value)); setSelectedDay(null); }} aria-label="Escolher ano">
-            {Array.from({ length: 7 }, (_, index) => currentDate.getFullYear() - 2 + index).map((year) => <option value={year} key={year}>{year}</option>)}
           </select>
         </div>
         <button type="button" className="calendar-nav" onClick={() => changeMonth(1)} aria-label="Próximo mês">›</button>
@@ -618,14 +616,27 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
 
       {selectedDay !== null && (
         <div className="calendar-day-details">
-          <div className="calendar-detail-heading"><strong>{selectedDay} de {months[selectedMonth]} de {selectedYear}</strong><span>{selectedEvents.length} movimentação(ões)</span></div>
-          {selectedEvents.length ? selectedEvents.map((event, index) => (
-            <div className="calendar-detail-item" key={event.type + event.label + index}>
-              <i className={"dot " + (event.type === "income" ? "income-dot" : event.status === "Pago" ? "paid-dot" : "expense-dot")} />
-              <div><strong>{event.label}</strong><span>{event.type === "income" ? "Recebimento estimado" : event.status === "Pago" ? "Pagamento realizado" : "Pagamento pendente"}</span></div>
-              <strong>{money(event.amount)}</strong>
-            </div>
-          )) : <p className="calendar-empty-day">Nenhum pagamento ou recebimento registrado nesta data.</p>}
+          <div className="calendar-detail-heading">
+            <div><span className="calendar-detail-kicker">RESUMO DO DIA</span><strong>{selectedDay} de {months[selectedMonth]} de {selectedYear}</strong></div>
+            <span className="calendar-detail-count">{selectedEvents.length} {selectedEvents.length === 1 ? "movimentação" : "movimentações"}</span>
+          </div>
+          {selectedEvents.length ? (
+            <>
+              <div className="calendar-day-totals">
+                <div className="calendar-total-income"><span>Recebimentos previstos</span><strong>{money(selectedEvents.filter((event) => event.type === "income").reduce((sum, event) => sum + event.amount, 0))}</strong></div>
+                <div className="calendar-total-payments"><span>Pagamentos</span><strong>{money(selectedEvents.filter((event) => event.type === "payment").reduce((sum, event) => sum + event.amount, 0))}</strong></div>
+              </div>
+              <div className="calendar-detail-list">
+                {selectedEvents.map((event, index) => (
+                  <div className={"calendar-detail-item " + (event.type === "income" ? "detail-income" : event.status === "Pago" ? "detail-paid" : "detail-payment")} key={event.type + event.label + index}>
+                    <div className="calendar-detail-icon">{event.type === "income" ? "↑" : event.status === "Pago" ? "✓" : "↓"}</div>
+                    <div className="calendar-detail-copy"><strong>{event.label}</strong><span>{event.type === "income" ? "Recebimento estimado" : event.status === "Pago" ? "Pagamento realizado" : "Pagamento pendente"}</span></div>
+                    <strong className="calendar-detail-amount">{money(event.amount)}</strong>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : <div className="calendar-empty-day"><strong>Dia livre</strong><span>Nenhum pagamento ou recebimento registrado nesta data.</span></div>}
         </div>
       )}
     </div>
