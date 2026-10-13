@@ -330,3 +330,28 @@ footer{color:#5f737e}
 .nexo-logo-mark{width:32px;height:32px;filter:none}
 .nexo-logo.compact .nexo-logo-mark{width:29px;height:29px}
 .nexo-logo span{letter-spacing:-.8px}
+
+
+/* Financial calendar event visibility and selected-day details */
+.calendar-selects{display:grid;grid-template-columns:minmax(0,1fr) 76px;gap:6px;min-width:0}
+.calendar-day{display:block;width:100%;text-align:left;cursor:pointer;font:inherit}
+.calendar-day:disabled{cursor:default}
+.calendar-day.has-events{border-color:#cbd8e2}
+.calendar-day.selected{border-color:#4fd1b5;box-shadow:inset 0 0 0 1px #4fd1b5;background:#f0fbf8}
+.calendar-event.paid-event{background:#edf1f5;color:#64748b;text-decoration:line-through}
+.calendar-more{display:block;margin-top:3px;font-size:7px;font-weight:800;color:#64748b}
+.calendar-legend .paid-dot,.paid-dot{background:#94a3b8}
+.calendar-day-details{margin-top:14px;padding-top:12px;border-top:1px solid #e8edf2}
+.calendar-detail-heading{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px;color:#344256;font-size:11px}
+.calendar-detail-heading span{font-size:9px;color:#7b8798}
+.calendar-detail-item{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #edf0f4;font-size:10px}
+.calendar-detail-item>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.calendar-detail-item>div strong{overflow-wrap:anywhere;color:#344256}
+.calendar-detail-item>div span{font-size:9px;color:#7b8798}
+.calendar-detail-item>strong{font-size:10px;color:#344256}
+.calendar-empty-day{font-size:10px;color:#7b8798;margin:8px 0}
+@media(max-width:700px){.calendar-selects{grid-template-columns:minmax(0,1fr) 68px}.calendar-day{padding:4px;min-height:54px}.calendar-more{font-size:6px}.calendar-detail-item{grid-template-columns:7px minmax(0,1fr) auto}}
+.dark .calendar-day.selected,.theme-dark .calendar-day.selected{background:#102a29}
+.dark .calendar-detail-heading,.dark .calendar-detail-item>div strong,.dark .calendar-detail-item>strong,.theme-dark .calendar-detail-heading,.theme-dark .calendar-detail-item>div strong,.theme-dark .calendar-detail-item>strong{color:#dcebe9}
+.dark .calendar-day-details,.theme-dark .calendar-day-details{border-color:#21313c}
+.dark .calendar-detail-item,.theme-dark .calendar-detail-item{border-color:#1b2b35}
