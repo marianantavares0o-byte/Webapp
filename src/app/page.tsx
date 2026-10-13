@@ -511,18 +511,10 @@ function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[
 }
 function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const today = new Date();
-    return today.getMonth();
-  });
-  const [selectedYear, setSelectedYear] = useState(() => {
-    const today = new Date();
-    return today.getFullYear();
-  });
-  const months = [
-    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-  ];
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const months = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 
   useEffect(() => {
     const timer = window.setInterval(() => setCurrentDate(new Date()), 60 * 1000);
@@ -533,27 +525,33 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
   const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
   const previousMonthDays = new Date(selectedYear, selectedMonth, 0).getDate();
   const totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
-  const events: Record<number, { type: "payment" | "income"; label: string }[]> = {};
+  const events: Record<number, { type: "payment" | "income"; label: string; amount: number; status?: string }[]> = {};
+
+  const addEvent = (day: number, event: { type: "payment" | "income"; label: string; amount: number; status?: string }) => {
+    if (day < 1 || day > daysInMonth) return;
+    if (!events[day]) events[day] = [];
+    events[day].push(event);
+  };
 
   expenses.forEach((expense) => {
-    const match = expense.due.match(/^(\\d{1,2})[\\/](\\d{1,2})/);
+    const match = expense.due.match(/^(\d{1,2})[\/](\d{1,2})/);
     if (!match) return;
-    const day = Number(match[1]);
-    const month = Number(match[2]) - 1;
-    if (month === selectedMonth && day >= 1 && day <= daysInMonth) {
-      if (!events[day]) events[day] = [];
-      events[day].push({ type: "payment", label: expense.name });
+    if (Number(match[2]) - 1 === selectedMonth) {
+      addEvent(Number(match[1]), { type: "payment", label: expense.name, amount: expense.amount, status: expense.status });
     }
   });
 
   income.forEach((item) => {
-    const match = item.range.match(/^(\\d{1,2})[–-](?:\\d{1,2})[\\/](\\d{1,2})|^(\\d{1,2})[\\/](\\d{1,2})/);
-    if (!match) return;
-    const day = Number(match[1] || match[3]);
-    const month = Number(match[2] || match[4]) - 1;
-    if (month === selectedMonth && day >= 1 && day <= daysInMonth) {
-      if (!events[day]) events[day] = [];
-      events[day].push({ type: "income", label: item.name });
+    const rangeMatch = item.range.match(/^(\d{1,2})[–-](\d{1,2})[\/](\d{1,2})/);
+    const singleMatch = item.range.match(/^(\d{1,2})[\/](\d{1,2})/);
+    if (rangeMatch && Number(rangeMatch[3]) - 1 === selectedMonth) {
+      const startDay = Number(rangeMatch[1]);
+      const endDay = Math.min(Number(rangeMatch[2]), daysInMonth);
+      for (let day = startDay; day <= endDay; day++) {
+        addEvent(day, { type: "income", label: item.name + " · período previsto", amount: item.amount });
+      }
+    } else if (singleMatch && Number(singleMatch[2]) - 1 === selectedMonth) {
+      addEvent(Number(singleMatch[1]), { type: "income", label: item.name, amount: item.amount });
     }
   });
 
@@ -561,23 +559,24 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
     const next = new Date(selectedYear, selectedMonth + delta, 1);
     setSelectedMonth(next.getMonth());
     setSelectedYear(next.getFullYear());
+    setSelectedDay(null);
   }
 
-  const isViewingCurrentMonth =
-    selectedMonth === currentDate.getMonth() && selectedYear === currentDate.getFullYear();
+  const isViewingCurrentMonth = selectedMonth === currentDate.getMonth() && selectedYear === currentDate.getFullYear();
+  const selectedEvents = selectedDay ? (events[selectedDay] || []) : [];
 
   return (
     <div className="financial-calendar">
       <div className="calendar-controls">
         <button type="button" className="calendar-nav" onClick={() => changeMonth(-1)} aria-label="Mês anterior">‹</button>
-        <select
-          className="calendar-month-select"
-          value={selectedMonth}
-          onChange={(event) => setSelectedMonth(Number(event.target.value))}
-          aria-label="Escolher mês"
-        >
-          {months.map((month, index) => <option value={index} key={month}>{month} {selectedYear}</option>)}
-        </select>
+        <div className="calendar-selects">
+          <select className="calendar-month-select" value={selectedMonth} onChange={(event) => { setSelectedMonth(Number(event.target.value)); setSelectedDay(null); }} aria-label="Escolher mês">
+            {months.map((month, index) => <option value={index} key={month}>{month}</option>)}
+          </select>
+          <select className="calendar-month-select calendar-year-select" value={selectedYear} onChange={(event) => { setSelectedYear(Number(event.target.value)); setSelectedDay(null); }} aria-label="Escolher ano">
+            {Array.from({ length: 7 }, (_, index) => currentDate.getFullYear() - 2 + index).map((year) => <option value={year} key={year}>{year}</option>)}
+          </select>
+        </div>
         <button type="button" className="calendar-nav" onClick={() => changeMonth(1)} aria-label="Próximo mês">›</button>
       </div>
 
@@ -589,31 +588,46 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
         {Array.from({ length: totalCells }, (_, index) => {
           const dayNumber = index - firstDay + 1;
           const inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
-          const displayDay = dayNumber < 1
-            ? previousMonthDays + dayNumber
-            : dayNumber > daysInMonth
-              ? dayNumber - daysInMonth
-              : dayNumber;
+          const displayDay = dayNumber < 1 ? previousMonthDays + dayNumber : dayNumber > daysInMonth ? dayNumber - daysInMonth : dayNumber;
           const dayEvents = inMonth ? (events[dayNumber] || []) : [];
           const isToday = isViewingCurrentMonth && dayNumber === currentDate.getDate();
+          const isSelected = inMonth && selectedDay === dayNumber;
 
           return (
-            <div className={"calendar-day " + (!inMonth ? "muted " : "") + (isToday ? "today" : "")} key={index}>
+            <button type="button" className={"calendar-day " + (!inMonth ? "muted " : "") + (isToday ? "today " : "") + (isSelected ? "selected " : "") + (dayEvents.length ? "has-events" : "")}
+              key={index} disabled={!inMonth} onClick={() => setSelectedDay(dayNumber)}
+              aria-label={inMonth ? (displayDay + " de " + months[selectedMonth] + ": " + dayEvents.length + " movimentações") : undefined}>
               <strong>{displayDay}</strong>
               {dayEvents.slice(0, 2).map((event, eventIndex) => (
-                <span key={event.type + event.label + eventIndex} className={"calendar-event " + event.type}>
+                <span key={event.type + event.label + eventIndex} className={"calendar-event " + event.type + (event.status === "Pago" ? " paid-event" : "")}
+                  title={event.label + " — " + money(event.amount) + (event.status ? " — " + event.status : "")}>
                   {event.type === "income" ? "↑ " : "↓ "}{event.label}
                 </span>
               ))}
-            </div>
+              {dayEvents.length > 2 && <span className="calendar-more">+{dayEvents.length - 2} outros</span>}
+            </button>
           );
         })}
       </div>
 
       <div className="calendar-legend">
-        <span><i className="dot income-dot" /> Recebimento</span>
-        <span><i className="dot expense-dot" /> Pagamento</span>
+        <span><i className="dot income-dot" /> Recebimento previsto</span>
+        <span><i className="dot expense-dot" /> Pagamento pendente</span>
+        <span><i className="dot paid-dot" /> Pago</span>
       </div>
+
+      {selectedDay !== null && (
+        <div className="calendar-day-details">
+          <div className="calendar-detail-heading"><strong>{selectedDay} de {months[selectedMonth]} de {selectedYear}</strong><span>{selectedEvents.length} movimentação(ões)</span></div>
+          {selectedEvents.length ? selectedEvents.map((event, index) => (
+            <div className="calendar-detail-item" key={event.type + event.label + index}>
+              <i className={"dot " + (event.type === "income" ? "income-dot" : event.status === "Pago" ? "paid-dot" : "expense-dot")} />
+              <div><strong>{event.label}</strong><span>{event.type === "income" ? "Recebimento estimado" : event.status === "Pago" ? "Pagamento realizado" : "Pagamento pendente"}</span></div>
+              <strong>{money(event.amount)}</strong>
+            </div>
+          )) : <p className="calendar-empty-day">Nenhum pagamento ou recebimento registrado nesta data.</p>}
+        </div>
+      )}
     </div>
   );
 }
