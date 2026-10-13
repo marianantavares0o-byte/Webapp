@@ -465,3 +465,43 @@ footer{color:#5f737e}
 .theme-dark .calendar-empty-day{background:#0d171f;border:1px solid #21313c;border-radius:10px;padding:13px;color:#afc1c7}
 .dark .calendar-empty-day strong,
 .theme-dark .calendar-empty-day strong{color:#dcebe9}
+
+
+/* Correção efetiva: manter o resumo do dia escuro independentemente da classe de tema aplicada pelo app */
+.financial-calendar .calendar-day.selected{
+  background:#102a29;
+  border-color:#4fd1b5;
+  color:#dcebe9;
+}
+.financial-calendar .calendar-day.selected>strong{color:#dcebe9}
+.financial-calendar .calendar-day-details{
+  background:linear-gradient(180deg,#0d171f 0%,#0a1117 100%);
+  border:1px solid #21313c;
+  border-radius:14px;
+  padding:15px;
+  margin-top:14px;
+  color:#dcebe9;
+}
+.financial-calendar .calendar-detail-heading{color:#dcebe9}
+.financial-calendar .calendar-detail-kicker{color:#4fd1b5;letter-spacing:1.1px}
+.financial-calendar .calendar-detail-heading>div strong{color:#e5f1ef}
+.financial-calendar .calendar-detail-count{background:#14232c;color:#9bb0b9;border:1px solid #263a45}
+.financial-calendar .calendar-day-totals>div{border:1px solid #243640;border-radius:10px}
+.financial-calendar .calendar-total-income{background:rgba(79,209,181,.08);border-color:#1b443c}
+.financial-calendar .calendar-total-income span{color:#8db8ae}
+.financial-calendar .calendar-total-income strong{color:#63d9bd}
+.financial-calendar .calendar-total-payments{background:rgba(255,139,125,.07);border-color:#4a2b2b}
+.financial-calendar .calendar-total-payments span{color:#c59b97}
+.financial-calendar .calendar-total-payments strong{color:#ff9c91}
+.financial-calendar .calendar-detail-list{display:grid;gap:7px}
+.financial-calendar .calendar-detail-item{background:#0d171f;border:1px solid #1b2b35;border-radius:9px;padding:10px}
+.financial-calendar .calendar-detail-item>div strong,
+.financial-calendar .calendar-detail-amount{color:#dcebe9}
+.financial-calendar .calendar-detail-item>div span{color:#8499a4}
+.financial-calendar .calendar-detail-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#17252e;color:#9bb0b9}
+.financial-calendar .calendar-detail-item.detail-income .calendar-detail-icon{background:rgba(79,209,181,.1);color:#63d9bd}
+.financial-calendar .calendar-detail-item.detail-payment .calendar-detail-icon{background:rgba(255,139,125,.1);color:#ff9c91}
+.financial-calendar .calendar-detail-item.detail-paid .calendar-detail-icon{background:rgba(148,163,184,.1);color:#9fb0bd}
+.financial-calendar .calendar-empty-day{background:#0d171f;border:1px solid #21313c;border-radius:10px;padding:13px;color:#afc1c7}
+.financial-calendar .calendar-empty-day strong{color:#dcebe9}
+@media(max-width:700px){.financial-calendar .calendar-day-details{padding:10px}}
