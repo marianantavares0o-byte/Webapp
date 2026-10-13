@@ -409,3 +409,59 @@ footer{color:#5f737e}
 @media(max-width:900px){
   .income-table .table-head,.income-table .table-row{min-width:760px}
 }
+
+
+/* Calendário — harmonização do resumo do dia com a paleta escura */
+.dark .calendar-day-details,
+.theme-dark .calendar-day-details{
+  background:linear-gradient(180deg,#0d171f 0%,#0a1117 100%);
+  border:1px solid #21313c;
+  border-radius:14px;
+  padding:15px;
+  margin-top:14px;
+  color:#dcebe9;
+}
+.dark .calendar-detail-heading,
+.theme-dark .calendar-detail-heading{color:#dcebe9}
+.dark .calendar-detail-kicker,
+.theme-dark .calendar-detail-kicker{color:#4fd1b5;letter-spacing:1.1px}
+.dark .calendar-detail-heading>div strong,
+.theme-dark .calendar-detail-heading>div strong{color:#e5f1ef}
+.dark .calendar-detail-count,
+.theme-dark .calendar-detail-count{background:#14232c;color:#9bb0b9;border:1px solid #263a45}
+.dark .calendar-day-totals>div,
+.theme-dark .calendar-day-totals>div{border:1px solid #243640;border-radius:10px}
+.dark .calendar-total-income,
+.theme-dark .calendar-total-income{background:rgba(79,209,181,.08);border-color:#1b443c}
+.dark .calendar-total-income span,
+.theme-dark .calendar-total-income span{color:#8db8ae}
+.dark .calendar-total-income strong,
+.theme-dark .calendar-total-income strong{color:#63d9bd}
+.dark .calendar-total-payments,
+.theme-dark .calendar-total-payments{background:rgba(255,139,125,.07);border-color:#4a2b2b}
+.dark .calendar-total-payments span,
+.theme-dark .calendar-total-payments span{color:#c59b97}
+.dark .calendar-total-payments strong,
+.theme-dark .calendar-total-payments strong{color:#ff9c91}
+.dark .calendar-detail-list,
+.theme-dark .calendar-detail-list{display:grid;gap:7px}
+.dark .calendar-detail-item,
+.theme-dark .calendar-detail-item{background:#0d171f;border:1px solid #1b2b35;border-radius:9px;padding:10px}
+.dark .calendar-detail-item>div strong,
+.dark .calendar-detail-amount,
+.theme-dark .calendar-detail-item>div strong,
+.theme-dark .calendar-detail-amount{color:#dcebe9}
+.dark .calendar-detail-item>div span,
+.theme-dark .calendar-detail-item>div span{color:#8499a4}
+.dark .calendar-detail-icon,
+.theme-dark .calendar-detail-icon{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#17252e;color:#9bb0b9}
+.dark .calendar-detail-item.detail-income .calendar-detail-icon,
+.theme-dark .calendar-detail-item.detail-income .calendar-detail-icon{background:rgba(79,209,181,.1);color:#63d9bd}
+.dark .calendar-detail-item.detail-payment .calendar-detail-icon,
+.theme-dark .calendar-detail-item.detail-payment .calendar-detail-icon{background:rgba(255,139,125,.1);color:#ff9c91}
+.dark .calendar-detail-item.detail-paid .calendar-detail-icon,
+.theme-dark .calendar-detail-item.detail-paid .calendar-detail-icon{background:rgba(148,163,184,.1);color:#9fb0bd}
+.dark .calendar-empty-day,
+.theme-dark .calendar-empty-day{background:#0d171f;border:1px solid #21313c;border-radius:10px;padding:13px;color:#afc1c7}
+.dark .calendar-empty-day strong,
+.theme-dark .calendar-empty-day strong{color:#dcebe9}
