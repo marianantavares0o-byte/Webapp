@@ -355,3 +355,46 @@ footer{color:#5f737e}
 .dark .calendar-detail-heading,.dark .calendar-detail-item>div strong,.dark .calendar-detail-item>strong,.theme-dark .calendar-detail-heading,.theme-dark .calendar-detail-item>div strong,.theme-dark .calendar-detail-item>strong{color:#dcebe9}
 .dark .calendar-day-details,.theme-dark .calendar-day-details{border-color:#21313c}
 .dark .calendar-detail-item,.theme-dark .calendar-detail-item{border-color:#1b2b35}
+
+
+/* Calendar: fixed year display and clearer daily summary */
+.calendar-selects{grid-template-columns:auto minmax(0,1fr);align-items:center}
+.calendar-year-label{font-size:11px;font-weight:800;color:#7b8798;text-align:center;white-space:nowrap;padding:0 3px}
+.calendar-day-details{margin-top:16px;padding:14px;border:1px solid #e5ebf1;border-radius:12px;background:linear-gradient(180deg,#fbfcfe 0%,#fff 100%)}
+.calendar-detail-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px}
+.calendar-detail-heading>div{display:flex;flex-direction:column;gap:4px}
+.calendar-detail-kicker{font-size:8px;letter-spacing:1px;font-weight:800;color:#8491a2}
+.calendar-detail-heading>div strong{font-size:13px;color:#253652}
+.calendar-detail-count{font-size:9px;font-weight:700;padding:5px 8px;border-radius:20px;background:#edf2f7;color:#627187;white-space:nowrap}
+.calendar-day-totals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.calendar-day-totals>div{padding:10px;border-radius:9px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.calendar-day-totals span{font-size:9px;line-height:1.4;color:#66758a}
+.calendar-day-totals strong{font-size:13px;font-weight:800}
+.calendar-total-income{background:#eaf8f3;border:1px solid #d7f0e7}
+.calendar-total-income strong{color:#25866d}
+.calendar-total-payments{background:#fff0ed;border:1px solid #f8dfda}
+.calendar-total-payments strong{color:#c55f54}
+.calendar-detail-list{display:flex;flex-direction:column;gap:7px}
+.calendar-detail-item{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px;background:#fff;border:1px solid #edf0f4;border-radius:9px}
+.calendar-detail-icon{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:15px;font-weight:800}
+.detail-income .calendar-detail-icon{background:#e9f9f4;color:#318b74}
+.detail-payment .calendar-detail-icon{background:#fff0ed;color:#c55f54}
+.detail-paid .calendar-detail-icon{background:#edf1f5;color:#64748b}
+.calendar-detail-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.calendar-detail-copy strong{font-size:10px;line-height:1.35;color:#344256;overflow-wrap:anywhere}
+.calendar-detail-copy span{font-size:9px;color:#7b8798}
+.calendar-detail-amount{font-size:10px;white-space:nowrap;color:#344256}
+.calendar-empty-day{display:flex;flex-direction:column;gap:5px;padding:14px 4px;border:1px dashed #dce3eb;border-radius:9px;text-align:center;background:#fff}
+.calendar-empty-day strong{font-size:11px;color:#53627a}
+.calendar-empty-day span{font-size:10px;color:#7b8798}
+@media(max-width:700px){.calendar-day-details{padding:10px}.calendar-detail-item{grid-template-columns:27px minmax(0,1fr) auto;gap:7px;padding:8px}.calendar-detail-amount{font-size:9px}.calendar-day-totals>div{padding:8px}.calendar-day-totals strong{font-size:12px}}
+.dark .calendar-year-label,.theme-dark .calendar-year-label{color:#8fa5af}
+.dark .calendar-day-details,.theme-dark .calendar-day-details{background:linear-gradient(180deg,#0d171f 0%,#0a1117 100%);border-color:#21313c}
+.dark .calendar-detail-heading>div strong,.theme-dark .calendar-detail-heading>div strong{color:#dcebe9}
+.dark .calendar-detail-count,.theme-dark .calendar-detail-count{background:#14232c;color:#9bb0b9}
+.dark .calendar-detail-item,.theme-dark .calendar-detail-item{background:#0d171f;border-color:#1b2b35}
+.dark .calendar-detail-copy strong,.dark .calendar-detail-amount,.theme-dark .calendar-detail-copy strong,.theme-dark .calendar-detail-amount{color:#dcebe9}
+.dark .calendar-total-income,.theme-dark .calendar-total-income{background:rgba(79,209,181,.08);border-color:#1b443c}
+.dark .calendar-total-payments,.theme-dark .calendar-total-payments{background:rgba(255,139,125,.08);border-color:#4a2b2b}
+.dark .calendar-empty-day,.theme-dark .calendar-empty-day{background:#0d171f;border-color:#21313c}
+.dark .calendar-empty-day strong,.theme-dark .calendar-empty-day strong{color:#afc1c7}
