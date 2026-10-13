@@ -398,3 +398,14 @@ footer{color:#5f737e}
 .dark .calendar-total-payments,.theme-dark .calendar-total-payments{background:rgba(255,139,125,.08);border-color:#4a2b2b}
 .dark .calendar-empty-day,.theme-dark .calendar-empty-day{background:#0d171f;border-color:#21313c}
 .dark .calendar-empty-day strong,.theme-dark .calendar-empty-day strong{color:#afc1c7}
+
+
+/* Receitas — mesma estrutura de ações e edição da tabela de despesas */
+.income-table .table-head,
+.income-table .table-row{grid-template-columns:1.4fr 1.2fr 1fr 1fr .9fr 54px}
+.income-table-row{position:relative}
+.income-table-row .confidence{justify-self:start;white-space:nowrap}
+.income-empty{padding:24px 16px;text-align:center;color:#81929f;font-size:12px;border-top:1px solid var(--nexo-line)}
+@media(max-width:900px){
+  .income-table .table-head,.income-table .table-row{min-width:760px}
+}
