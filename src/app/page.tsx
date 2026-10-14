@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
 
@@ -75,7 +76,7 @@ function Icon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24" className="icon" aria-hidden="true"><path d={paths[name] || paths.grid} /></svg>;
 }
 
-export default function Home() {
+function FinanceApp({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("visao");
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income, setIncome] = useState(initialIncome);
@@ -85,27 +86,78 @@ export default function Home() {
   const [showAddIncome, setShowAddIncome] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const supabase = createClient();
+
   useEffect(() => {
-    try {
-      const savedExpenses = localStorage.getItem("fluxo-expenses");
-      const savedIncome = localStorage.getItem("fluxo-income");
-      const savedBalance = localStorage.getItem("fluxo-balance");
-      if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
-      if (savedIncome) setIncome(JSON.parse(savedIncome));
-      if (savedBalance) setBalance(Number(savedBalance));
-    } catch {
-      // Mantém os dados iniciais caso o armazenamento local esteja indisponível.
-    } finally {
-      setStorageLoaded(true);
+    let cancelled = false;
+    async function loadFinancialData() {
+      try {
+        const { data: cloudRow, error } = await supabase
+          .from("user_financial_data")
+          .select("data")
+          .eq("user_id", userId)
+          .eq("section", "main")
+          .maybeSingle();
+        if (error) throw error;
+        if (cancelled) return;
+        if (cloudRow?.data) {
+          const saved = cloudRow.data as { expenses?: Expense[]; income?: Income[]; balance?: number };
+          if (Array.isArray(saved.expenses)) setExpenses(saved.expenses);
+          if (Array.isArray(saved.income)) setIncome(saved.income);
+          if (typeof saved.balance === "number") setBalance(saved.balance);
+        } else {
+          // Migra os dados locais existentes para a conta na primeira utilização.
+          const savedExpenses = localStorage.getItem("fluxo-expenses");
+          const savedIncome = localStorage.getItem("fluxo-income");
+          const savedBalance = localStorage.getItem("fluxo-balance");
+          const legacy = {
+            expenses: savedExpenses ? JSON.parse(savedExpenses) as Expense[] : initialExpenses,
+            income: savedIncome ? JSON.parse(savedIncome) as Income[] : initialIncome,
+            balance: savedBalance ? Number(savedBalance) : 2450
+          };
+          if (Array.isArray(legacy.expenses)) setExpenses(legacy.expenses);
+          if (Array.isArray(legacy.income)) setIncome(legacy.income);
+          if (typeof legacy.balance === "number" && Number.isFinite(legacy.balance)) setBalance(legacy.balance);
+          const { error: saveError } = await supabase.from("user_financial_data").upsert({
+            user_id: userId, section: "main", data: legacy, updated_at: new Date().toISOString()
+          }, { onConflict: "user_id,section" });
+          if (saveError) throw saveError;
+        }
+      } catch (error) {
+        console.error("Não foi possível carregar os dados financeiros da nuvem:", error);
+        // Mantém os dados locais como alternativa caso a conexão falhe.
+        try {
+          const savedExpenses = localStorage.getItem("fluxo-expenses");
+          const savedIncome = localStorage.getItem("fluxo-income");
+          const savedBalance = localStorage.getItem("fluxo-balance");
+          if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
+          if (savedIncome) setIncome(JSON.parse(savedIncome));
+          if (savedBalance) setBalance(Number(savedBalance));
+        } catch {}
+      } finally {
+        if (!cancelled) setStorageLoaded(true);
+      }
     }
-  }, []);
+    loadFinancialData();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   useEffect(() => {
     if (!storageLoaded) return;
     localStorage.setItem("fluxo-expenses", JSON.stringify(expenses));
     localStorage.setItem("fluxo-income", JSON.stringify(income));
     localStorage.setItem("fluxo-balance", String(balance));
-  }, [expenses, income, balance, storageLoaded]);
+    const timer = setTimeout(async () => {
+      const { error } = await supabase.from("user_financial_data").upsert({
+        user_id: userId,
+        section: "main",
+        data: { expenses, income, balance },
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id,section" });
+      if (error) console.error("Não foi possível salvar os dados financeiros na nuvem:", error);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [expenses, income, balance, storageLoaded, userId]);
 
   const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
   const [newIncome, setNewIncome] = useState({ name: "", source: "", amount: "", day: "", confidence: "Média" as Income["confidence"] });
@@ -331,7 +383,7 @@ export default function Home() {
 
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
         {tab === "receitas" && <IncomeView income={income} onAdd={() => { setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); setEditingIncome(null); setShowAddIncome(true); }} onEdit={startEditIncome} onDelete={deleteIncome} />}
-        {tab === "investimentos" && <InvestmentView balance={balance} />}
+        {tab === "investimentos" && <InvestmentView balance={balance} userId={userId} />}
         {tab === "analise" && <AnalysisView expenses={expenses} income={income} />}
 
         <footer>Nexo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
@@ -418,7 +470,8 @@ function parseInvestmentNumber(value: string) {
   return normalized === "" ? NaN : Number(normalized);
 }
 
-function InvestmentView({ balance }: { balance: number }) {
+function InvestmentView({ balance, userId }: { balance: number; userId: string }) {
+  const supabase = createClient();
   const [name, setName] = useState("");
   const [capital, setCapital] = useState("");
   const [yieldMethod, setYieldMethod] = useState<YieldMethod>("anual");
@@ -469,33 +522,86 @@ function InvestmentView({ balance }: { balance: number }) {
           : yieldMethod === "periodo" ? "% no período inteiro" : "R$ de montante final";
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("fluxo-investment-simulations");
-      if (saved) setSavedSimulations(JSON.parse(saved));
-      const draft = localStorage.getItem("fluxo-investment-draft");
-      if (draft) {
-        const parsed = JSON.parse(draft);
-        if (typeof parsed.name === "string") setName(parsed.name);
-        if (typeof parsed.capital === "string") setCapital(parsed.capital);
-        if (["anual", "mensal", "diario", "cdi", "periodo", "valorFinal"].includes(parsed.yieldMethod)) setYieldMethod(parsed.yieldMethod);
-        if (typeof parsed.rate === "string") setRate(parsed.rate);
-        if (typeof parsed.cdiRate === "string") setCdiRate(parsed.cdiRate);
-        if (typeof parsed.fixedFinalValue === "string") setFixedFinalValue(parsed.fixedFinalValue);
-        if (parsed.liquidity === "imediata" || parsed.liquidity === "vencimento") setLiquidity(parsed.liquidity);
-        if (typeof parsed.targetDate === "string" && parsed.targetDate >= today) setTargetDate(parsed.targetDate);
+    let cancelled = false;
+    async function loadInvestmentData() {
+      try {
+        const { data: cloudRow, error } = await supabase
+          .from("user_financial_data")
+          .select("data")
+          .eq("user_id", userId)
+          .eq("section", "investments")
+          .maybeSingle();
+        if (error) throw error;
+        if (cancelled) return;
+        let savedSimulationsValue: InvestmentSimulation[] = [];
+        let draftValue: Record<string, unknown> | null = null;
+        if (cloudRow?.data) {
+          const saved = cloudRow.data as { savedSimulations?: InvestmentSimulation[]; draft?: Record<string, unknown> };
+          if (Array.isArray(saved.savedSimulations)) savedSimulationsValue = saved.savedSimulations;
+          if (saved.draft && typeof saved.draft === "object") draftValue = saved.draft;
+        } else {
+          const localSaved = localStorage.getItem("fluxo-investment-simulations");
+          const localDraft = localStorage.getItem("fluxo-investment-draft");
+          if (localSaved) savedSimulationsValue = JSON.parse(localSaved);
+          if (localDraft) draftValue = JSON.parse(localDraft);
+          const { error: saveError } = await supabase.from("user_financial_data").upsert({
+            user_id: userId,
+            section: "investments",
+            data: { savedSimulations: savedSimulationsValue, draft: draftValue || { name: "", capital: "", yieldMethod: "anual", rate: "11,98", cdiRate: "14,90", fixedFinalValue: "", liquidity: "imediata", targetDate } },
+            updated_at: new Date().toISOString()
+          }, { onConflict: "user_id,section" });
+          if (saveError) throw saveError;
+        }
+        if (cancelled) return;
+        setSavedSimulations(savedSimulationsValue);
+        if (draftValue) {
+          if (typeof draftValue.name === "string") setName(draftValue.name);
+          if (typeof draftValue.capital === "string") setCapital(draftValue.capital);
+          if (["anual", "mensal", "diario", "cdi", "periodo", "valorFinal"].includes(String(draftValue.yieldMethod))) setYieldMethod(draftValue.yieldMethod as YieldMethod);
+          if (typeof draftValue.rate === "string") setRate(draftValue.rate);
+          if (typeof draftValue.cdiRate === "string") setCdiRate(draftValue.cdiRate);
+          if (typeof draftValue.fixedFinalValue === "string") setFixedFinalValue(draftValue.fixedFinalValue);
+          if (draftValue.liquidity === "imediata" || draftValue.liquidity === "vencimento") setLiquidity(draftValue.liquidity);
+          if (typeof draftValue.targetDate === "string" && draftValue.targetDate >= today) setTargetDate(draftValue.targetDate);
+        }
+      } catch (error) {
+        console.error("Não foi possível carregar as simulações da nuvem:", error);
+        try {
+          const saved = localStorage.getItem("fluxo-investment-simulations");
+          if (saved) setSavedSimulations(JSON.parse(saved));
+          const draft = localStorage.getItem("fluxo-investment-draft");
+          if (draft) {
+            const parsed = JSON.parse(draft);
+            if (typeof parsed.name === "string") setName(parsed.name);
+            if (typeof parsed.capital === "string") setCapital(parsed.capital);
+            if (typeof parsed.rate === "string") setRate(parsed.rate);
+            if (typeof parsed.cdiRate === "string") setCdiRate(parsed.cdiRate);
+          }
+        } catch {}
+      } finally {
+        if (!cancelled) setStorageLoaded(true);
       }
-    } catch {
-      // Mantém os campos padrão se o armazenamento local estiver indisponível ou inválido.
-    } finally {
-      setStorageLoaded(true);
     }
-  }, []);
+    loadInvestmentData();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   useEffect(() => {
     if (!storageLoaded) return;
+    const draft = { name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate };
     localStorage.setItem("fluxo-investment-simulations", JSON.stringify(savedSimulations));
-    localStorage.setItem("fluxo-investment-draft", JSON.stringify({ name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate }));
-  }, [savedSimulations, name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate, storageLoaded]);
+    localStorage.setItem("fluxo-investment-draft", JSON.stringify(draft));
+    const timer = setTimeout(async () => {
+      const { error } = await supabase.from("user_financial_data").upsert({
+        user_id: userId,
+        section: "investments",
+        data: { savedSimulations, draft },
+        updated_at: new Date().toISOString()
+      }, { onConflict: "user_id,section" });
+      if (error) console.error("Não foi possível salvar as simulações na nuvem:", error);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [savedSimulations, name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate, storageLoaded, userId]);
 
   function saveSimulation() {
     if (!validInputs) return;
@@ -957,4 +1063,94 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
       )}
     </div>
   );
+}
+
+type AuthMode = "login" | "signup" | "forgot";
+
+function AuthScreen() {
+  const supabase = createClient();
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage("");
+    setErrorMessage("");
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+        if (error) throw error;
+        setMessage(data.session
+          ? "Conta criada. Você já pode usar o Nexo."
+          : "Conta criada. Verifique seu e-mail para confirmar o cadastro antes de entrar.");
+        if (!data.session) setMode("login");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: window.location.origin
+        });
+        if (error) throw error;
+        setMessage("Se houver uma conta para esse e-mail, enviaremos as instruções de recuperação.");
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (error) throw error;
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Não foi possível concluir a operação.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <main className="auth-shell">
+    <section className="auth-card">
+      <NexoLogo />
+      <p className="eyebrow">GESTÃO FINANCEIRA PESSOAL</p>
+      <h1>{mode === "signup" ? "Crie sua conta" : mode === "forgot" ? "Recuperar acesso" : "Entre no Nexo"}</h1>
+      <p className="auth-description">{mode === "signup" ? "Seus dados financeiros ficam vinculados à sua conta." : mode === "forgot" ? "Informe seu e-mail para receber as instruções de recuperação." : "Acesse suas despesas, receitas e simulações salvas na nuvem."}</p>
+      <form onSubmit={submit} className="auth-form">
+        <label htmlFor="nexo-email">E-mail</label>
+        <input id="nexo-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="voce@exemplo.com" />
+        {mode !== "forgot" && <>
+          <label htmlFor="nexo-password">Senha</label>
+          <input id="nexo-password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo de 6 caracteres" />
+        </>}
+        {message && <p className="auth-success" role="status">{message}</p>}
+        {errorMessage && <p className="auth-error" role="alert">{errorMessage}</p>}
+        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "forgot" ? "Enviar instruções" : "Entrar"}</button>
+      </form>
+      <div className="auth-links">
+        {mode === "login" && <><button type="button" onClick={() => { setMode("signup"); setMessage(""); setErrorMessage(""); }}>Criar uma conta</button><button type="button" onClick={() => { setMode("forgot"); setMessage(""); setErrorMessage(""); }}>Esqueci minha senha</button></>}
+        {mode !== "login" && <button type="button" onClick={() => { setMode("login"); setMessage(""); setErrorMessage(""); }}>Voltar para entrar</button>}
+      </div>
+    </section>
+  </main>;
+}
+
+export default function Home() {
+  const supabase = createClient();
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setUserId(data.session?.user.id ?? null);
+        setSessionChecked(true);
+      }
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setUserId(session?.user.id ?? null);
+        setSessionChecked(true);
+      }
+    });
+    return () => { mounted = false; listener.subscription.unsubscribe(); };
+  }, []);
+  if (!sessionChecked) return <main className="auth-shell"><section className="auth-card"><NexoLogo /><p>Carregando sua conta...</p></section></main>;
+  return userId ? <FinanceApp userId={userId} /> : <AuthScreen />;
 }
