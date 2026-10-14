@@ -41,6 +41,36 @@ const initialIncome: Income[] = [
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+type IncomeAlert = {
+  income: Income;
+  daysUntil: number;
+  inEstimatedWindow: boolean;
+};
+
+function getNextIncomeAlert(incomes: Income[], referenceDate = new Date()): IncomeAlert | null {
+  const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
+  const alerts = incomes.flatMap((item) => {
+    const match = item.range.match(/(\\d{1,2})\\s*(?:[–—-]\\s*(\\d{1,2}))?\\s*\\/\\s*(\\d{1,2})/);
+    if (!match) return [];
+    const startDay = Number(match[1]);
+    const endDay = Number(match[2] || match[1]);
+    const month = Number(match[3]) - 1;
+    if (month < 0 || month > 11 || startDay < 1 || endDay < startDay) return [];
+
+    let start = new Date(today.getFullYear(), month, startDay, 12);
+    let end = new Date(today.getFullYear(), month, endDay, 12);
+    if (end < today) {
+      start = new Date(today.getFullYear() + 1, month, startDay, 12);
+      end = new Date(today.getFullYear() + 1, month, endDay, 12);
+    }
+    const inEstimatedWindow = today >= start && today <= end;
+    const daysUntil = inEstimatedWindow ? 0 : Math.max(0, Math.round((start.getTime() - today.getTime()) / 86400000));
+    return [{ income: item, daysUntil, inEstimatedWindow, start }];
+  });
+  alerts.sort((a, b) => a.daysUntil - b.daysUntil || a.start.getTime() - b.start.getTime());
+  return alerts.length ? alerts[0] : null;
+}
+
 
 function NexoLogo({ compact = false }: { compact?: boolean }) {
   return (
@@ -78,6 +108,7 @@ function Icon({ name }: { name: string }) {
 
 function FinanceApp({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("visao");
+  const [showNotifications, setShowNotifications] = useState(false);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income, setIncome] = useState(initialIncome);
   const [balance, setBalance] = useState(2450);
@@ -303,7 +334,56 @@ function FinanceApp({ userId }: { userId: string }) {
       <section className="content">
         <header className="topbar">
           <div><p className="eyebrow">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p><h1>{tab === "visao" ? "Seu dinheiro, em perspectiva." : nav.find((n) => n[0] === tab)?.[1]}</h1></div>
-          <div className="top-actions"><button className="icon-button"><Icon name="bell"/><span className="notification-dot"/></button><button className="primary" onClick={() => setShowAdd(true)}><Icon name="plus"/> Novo gasto</button></div>
+          <div className="top-actions">
+            <div className="notification-wrap">
+              <button
+                type="button"
+                className="icon-button notification-button"
+                aria-label="Ver alerta do próximo recebimento"
+                aria-expanded={showNotifications}
+                onClick={() => setShowNotifications((open) => !open)}
+              >
+                <Icon name="bell"/>
+                {income.length > 0 && <span className="notification-dot"/>}
+              </button>
+              {showNotifications && (
+                <section className="notification-popover" aria-label="Alerta do próximo recebimento">
+                  <div className="notification-popover-head">
+                    <div><span className="notification-kicker">ALERTA FINANCEIRO</span><h2>Próximo pagamento</h2></div>
+                    <button type="button" className="notification-close" aria-label="Fechar alerta" onClick={() => setShowNotifications(false)}>×</button>
+                  </div>
+                  {(() => {
+                    const alert = getNextIncomeAlert(income);
+                    if (!alert) {
+                      return <div className="notification-empty"><p>Não encontrei uma data de recebimento válida nas suas receitas.</p><button type="button" onClick={() => { setShowNotifications(false); setTab("receitas"); }}>Ver receitas</button></div>;
+                    }
+                    return (
+                      <div className="notification-income">
+                        <div className="notification-countdown">
+                          <strong>{alert.daysUntil}</strong>
+                          <span>{alert.daysUntil === 1 ? "dia restante" : "dias restantes"}</span>
+                        </div>
+                        <div className="notification-income-copy">
+                          <strong>{alert.income.name}</strong>
+                          <span>{alert.income.range}</span>
+                          <b>{money(alert.income.amount)}</b>
+                        </div>
+                        <p className="notification-message">
+                          {alert.inEstimatedWindow
+                            ? "Você está dentro do período estimado para receber esse pagamento."
+                            : alert.daysUntil === 0
+                              ? "O recebimento está previsto para hoje."
+                              : `Faltam ${alert.daysUntil} dias para o início do período estimado de recebimento.`}
+                        </p>
+                      </div>
+                    );
+                  })()}
+                  <button type="button" className="notification-footer" onClick={() => { setShowNotifications(false); setTab("receitas"); }}>Conferir todas as receitas</button>
+                </section>
+              )}
+            </div>
+            <button className="primary" onClick={() => setShowAdd(true)}><Icon name="plus"/> Novo gasto</button>
+          </div>
         </header>
 
         {tab === "visao" && (
