@@ -347,9 +347,9 @@ function FinanceApp({ userId }: { userId: string }) {
                 {income.length > 0 && <span className="notification-dot"/>}
               </button>
               {showNotifications && (
-                <section className="notification-popover" aria-label="Alerta do próximo recebimento">
+                <section className="notification-popover" aria-label="Alerta de receita futura">
                   <div className="notification-popover-head">
-                    <div><span className="notification-kicker">ALERTA FINANCEIRO</span><h2>Próximo pagamento</h2></div>
+                    <div><span className="notification-kicker">ENTRADA DE DINHEIRO</span><h2>Próximo recebimento</h2></div>
                     <button type="button" className="notification-close" aria-label="Fechar alerta" onClick={() => setShowNotifications(false)}>×</button>
                   </div>
                   {(() => {
@@ -365,20 +365,20 @@ function FinanceApp({ userId }: { userId: string }) {
                         </div>
                         <div className="notification-income-copy">
                           <strong>{alert.income.name}</strong>
-                          <span>{alert.income.range}</span>
-                          <b>{money(alert.income.amount)}</b>
+                          <span>Previsão: {alert.income.range}</span>
+                          <b className="notification-receive-amount">A receber: {money(alert.income.amount)}</b>
                         </div>
                         <p className="notification-message">
                           {alert.inEstimatedWindow
-                            ? "Você está dentro do período estimado para receber esse pagamento."
+                            ? "Você está dentro do período estimado para receber esse valor."
                             : alert.daysUntil === 0
-                              ? "O recebimento está previsto para hoje."
+                              ? "Este valor está previsto para entrar hoje."
                               : `Faltam ${alert.daysUntil} dias para o início do período estimado de recebimento.`}
                         </p>
                       </div>
                     );
                   })()}
-                  <button type="button" className="notification-footer" onClick={() => { setShowNotifications(false); setTab("receitas"); }}>Conferir todas as receitas</button>
+                  <button type="button" className="notification-footer" onClick={() => { setShowNotifications(false); setTab("receitas"); }}>Ver receitas cadastradas</button>
                 </section>
               )}
             </div>
