@@ -573,3 +573,29 @@ footer{color:#5f737e}
 .auth-signout{border:1px solid rgba(255,255,255,.13);background:transparent;color:#aebacc;border-radius:8px;padding:9px 10px;text-align:left;font-size:11px;margin-top:12px}
 .auth-signout:hover{color:#fff;background:rgba(255,255,255,.06)}
 @media(max-width:520px){.auth-card{padding:26px 22px}.auth-card h1{font-size:25px}}
+
+
+/* Alertas do sino: contagem regressiva para o próximo recebimento */
+.notification-wrap{position:relative;display:inline-flex;align-items:center}
+.notification-button{cursor:pointer;transition:border-color .15s ease,background .15s ease,color .15s ease}
+.notification-button:hover,.notification-button[aria-expanded="true"]{background:#10242b;border-color:#2d5c5b;color:#65d9c0}
+.notification-button .icon{width:17px;height:17px;stroke:currentColor;stroke-width:1.8;fill:none}
+.notification-popover{position:absolute;top:calc(100% + 12px);right:0;width:min(340px,calc(100vw - 28px));z-index:50;padding:17px;border:1px solid #263a45;border-radius:15px;background:linear-gradient(145deg,#101e27,#0a131a);box-shadow:0 20px 55px rgba(0,0,0,.42);color:#dcebe9}
+.notification-popover-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:15px}
+.notification-kicker{display:block;margin-bottom:5px;color:#4fd1b5;font-size:8px;font-weight:800;letter-spacing:1.3px}
+.notification-popover-head h2{margin:0;color:#edf7f5;font-size:15px}
+.notification-close{width:26px;height:26px;flex:none;border:1px solid #263a45;border-radius:7px;background:#15242d;color:#9fb2bb;font-size:19px;line-height:1;cursor:pointer}
+.notification-income{display:grid;grid-template-columns:76px minmax(0,1fr);gap:12px;align-items:center}
+.notification-countdown{min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid #1b443c;border-radius:11px;background:rgba(79,209,181,.08)}
+.notification-countdown strong{font-size:29px;line-height:1;color:#63d9bd;letter-spacing:-1px}
+.notification-countdown span{font-size:8px;color:#8db8ae;text-align:center}
+.notification-income-copy{display:grid;gap:5px;min-width:0}
+.notification-income-copy strong{font-size:12px;color:#e5f1ef;overflow-wrap:anywhere}
+.notification-income-copy span{font-size:10px;color:#8fa5af}
+.notification-income-copy b{font-size:13px;color:#63d9bd}
+.notification-message{grid-column:1/-1;margin-top:1px;padding:10px 11px;border:1px solid #223640;border-radius:9px;background:#0c171e;color:#9bb0b9;font-size:10px;line-height:1.55}
+.notification-footer,.notification-empty button{width:100%;margin-top:12px;padding:10px;border:1px solid #27504e;border-radius:9px;background:rgba(79,209,181,.08);color:#72dfc6;font-size:10px;font-weight:700;cursor:pointer}
+.notification-footer:hover,.notification-empty button:hover{background:rgba(79,209,181,.14)}
+.notification-empty p{font-size:11px;line-height:1.6;color:#9bb0b9}
+.notification-empty button{margin-top:10px}
+@media(max-width:520px){.notification-popover{right:-45px;padding:14px}.notification-income{grid-template-columns:68px minmax(0,1fr)}.notification-countdown{min-height:74px}}
