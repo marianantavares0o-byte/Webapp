@@ -387,16 +387,22 @@ function IncomeView({ income, onAdd, onEdit, onDelete }: { income: Income[]; onA
   </section>;
 }
 
+type YieldMethod = "anual" | "mensal" | "diario" | "cdi" | "periodo" | "valorFinal";
+
 type InvestmentSimulation = {
   id: number;
   name: string;
   capital: number;
-  annualRate: number;
+  annualRate?: number;
+  yieldMethod?: YieldMethod;
+  rate: number;
+  cdiRate?: number;
   liquidity: "imediata" | "vencimento";
   targetDate: string;
   days: number;
   projectedValue: number;
   estimatedGain: number;
+  methodLabel?: string;
 };
 
 function localDateString(date: Date) {
@@ -406,10 +412,18 @@ function localDateString(date: Date) {
   return year + "-" + month + "-" + day;
 }
 
+function parseInvestmentNumber(value: string) {
+  const normalized = value.trim().replace(/\s/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".");
+  return normalized === "" ? NaN : Number(normalized);
+}
+
 function InvestmentView({ balance }: { balance: number }) {
   const [name, setName] = useState("");
-  const [capital, setCapital] = useState("500");
-  const [annualRate, setAnnualRate] = useState("11,98");
+  const [capital, setCapital] = useState("");
+  const [yieldMethod, setYieldMethod] = useState<YieldMethod>("anual");
+  const [rate, setRate] = useState("11,98");
+  const [cdiRate, setCdiRate] = useState("14,90");
+  const [fixedFinalValue, setFixedFinalValue] = useState("");
   const [liquidity, setLiquidity] = useState<"imediata" | "vencimento">("imediata");
   const [targetDate, setTargetDate] = useState(() => {
     const date = new Date();
@@ -419,24 +433,58 @@ function InvestmentView({ balance }: { balance: number }) {
   const [savedSimulations, setSavedSimulations] = useState<InvestmentSimulation[]>([]);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const today = localDateString(new Date());
-  const capitalValue = Number(capital.replace(",", "."));
-  const rateValue = Number(annualRate.replace(",", "."));
+  const capitalValue = parseInvestmentNumber(capital);
+  const rateValue = parseInvestmentNumber(rate);
+  const cdiRateValue = parseInvestmentNumber(cdiRate);
+  const fixedValue = parseInvestmentNumber(fixedFinalValue);
   const target = targetDate ? new Date(targetDate + "T12:00:00") : null;
   const startDate = new Date(today + "T12:00:00");
-  const days = target && !Number.isNaN(target.getTime())
-    ? Math.max(0, Math.ceil((target.getTime() - startDate.getTime()) / 86400000))
-    : 0;
-  const validInputs = name.trim().length > 0 && Number.isFinite(capitalValue) && capitalValue > 0 &&
-    Number.isFinite(rateValue) && rateValue >= 0 && rateValue <= 100 && !!targetDate && targetDate >= today;
-  const projectedValue = validInputs ? capitalValue * Math.pow(1 + rateValue / 100, days / 365) : 0;
+  const days = target && !Number.isNaN(target.getTime()) ? Math.max(0, Math.ceil((target.getTime() - startDate.getTime()) / 86400000)) : 0;
+  const rateValid = yieldMethod === "cdi"
+    ? Number.isFinite(rateValue) && rateValue >= 0 && rateValue <= 200 && Number.isFinite(cdiRateValue) && cdiRateValue > 0 && cdiRateValue <= 200
+    : yieldMethod === "valorFinal"
+      ? Number.isFinite(fixedValue) && fixedValue >= 0
+      : Number.isFinite(rateValue) && rateValue >= 0 && rateValue <= 200;
+  const validInputs = name.trim().length > 0 && Number.isFinite(capitalValue) && capitalValue > 0 && rateValid && !!targetDate && targetDate >= today;
+  const effectiveAnnualRate = yieldMethod === "cdi" ? (Math.pow(1 + cdiRateValue / 100, rateValue / 100) - 1) * 100 : rateValue;
+  const projectedValue = !validInputs ? 0 : yieldMethod === "valorFinal"
+    ? fixedValue
+    : yieldMethod === "mensal"
+      ? capitalValue * Math.pow(1 + rateValue / 100, days / 30)
+      : yieldMethod === "diario"
+        ? capitalValue * Math.pow(1 + rateValue / 100, days)
+        : yieldMethod === "periodo"
+          ? capitalValue * (1 + rateValue / 100)
+          : capitalValue * Math.pow(1 + effectiveAnnualRate / 100, days / 365);
   const estimatedGain = projectedValue - capitalValue;
+  const methodLabels: Record<YieldMethod, string> = {
+    anual: "Taxa anual", mensal: "Taxa mensal", diario: "Taxa diária",
+    cdi: "Percentual do CDI", periodo: "Taxa acumulada no período", valorFinal: "Valor final informado"
+  };
+  const rateDescription = yieldMethod === "anual" ? "% ao ano"
+    : yieldMethod === "mensal" ? "% ao mês"
+      : yieldMethod === "diario" ? "% ao dia"
+        : yieldMethod === "cdi" ? "% do CDI"
+          : yieldMethod === "periodo" ? "% no período inteiro" : "R$ de montante final";
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem("fluxo-investment-simulations");
       if (saved) setSavedSimulations(JSON.parse(saved));
+      const draft = localStorage.getItem("fluxo-investment-draft");
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        if (typeof parsed.name === "string") setName(parsed.name);
+        if (typeof parsed.capital === "string") setCapital(parsed.capital);
+        if (["anual", "mensal", "diario", "cdi", "periodo", "valorFinal"].includes(parsed.yieldMethod)) setYieldMethod(parsed.yieldMethod);
+        if (typeof parsed.rate === "string") setRate(parsed.rate);
+        if (typeof parsed.cdiRate === "string") setCdiRate(parsed.cdiRate);
+        if (typeof parsed.fixedFinalValue === "string") setFixedFinalValue(parsed.fixedFinalValue);
+        if (parsed.liquidity === "imediata" || parsed.liquidity === "vencimento") setLiquidity(parsed.liquidity);
+        if (typeof parsed.targetDate === "string" && parsed.targetDate >= today) setTargetDate(parsed.targetDate);
+      }
     } catch {
-      // Mantém a lista vazia se o armazenamento local estiver indisponível.
+      // Mantém os campos padrão se o armazenamento local estiver indisponível ou inválido.
     } finally {
       setStorageLoaded(true);
     }
@@ -445,20 +493,19 @@ function InvestmentView({ balance }: { balance: number }) {
   useEffect(() => {
     if (!storageLoaded) return;
     localStorage.setItem("fluxo-investment-simulations", JSON.stringify(savedSimulations));
-  }, [savedSimulations, storageLoaded]);
+    localStorage.setItem("fluxo-investment-draft", JSON.stringify({ name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate }));
+  }, [savedSimulations, name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate, storageLoaded]);
 
   function saveSimulation() {
     if (!validInputs) return;
+    const methodLabel = yieldMethod === "valorFinal" ? "Valor final informado"
+      : yieldMethod === "cdi" ? rateValue.toLocaleString("pt-BR") + "% do CDI"
+        : rateValue.toLocaleString("pt-BR") + " " + rateDescription;
     setSavedSimulations((current) => [{
-      id: Date.now(),
-      name: name.trim(),
-      capital: capitalValue,
-      annualRate: rateValue,
-      liquidity,
-      targetDate,
-      days,
-      projectedValue,
-      estimatedGain
+      id: Date.now(), name: name.trim(), capital: capitalValue, yieldMethod,
+      rate: yieldMethod === "valorFinal" ? fixedValue : rateValue,
+      cdiRate: yieldMethod === "cdi" ? cdiRateValue : undefined,
+      liquidity, targetDate, days, projectedValue, estimatedGain, methodLabel
     }, ...current]);
   }
 
@@ -474,19 +521,36 @@ function InvestmentView({ balance }: { balance: number }) {
     </div>
     <div className="grid-2 investment-layout">
       <div className="panel investment-simulator-panel">
-        <div className="panel-heading"><div><h2>Simulador de investimento</h2><p>Informe os dados do investimento para projetar o rendimento bruto até a data escolhida.</p></div><Icon name="trend"/></div>
+        <div className="panel-heading"><div><h2>Simulador de investimento</h2><p>Os campos são guardados automaticamente neste navegador. Escolha como o investimento rende para calcular uma estimativa bruta.</p></div><Icon name="trend"/></div>
         <div className="investment-form">
           <label>Nome do investimento
             <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: LCI Banco X, CDB, Tesouro..." maxLength={80}/>
           </label>
           <div className="form-grid">
             <label>Capital aplicado (R$)
-              <input inputMode="decimal" value={capital} onChange={(event) => setCapital(event.target.value)} placeholder="500,00"/>
+              <input inputMode="decimal" value={capital} onChange={(event) => setCapital(event.target.value)} placeholder="Ex.: 1.500,00"/>
             </label>
-            <label>Taxa anual (% a.a.)
-              <input inputMode="decimal" value={annualRate} onChange={(event) => setAnnualRate(event.target.value)} placeholder="11,98"/>
+            <label>Forma de rendimento
+              <select value={yieldMethod} onChange={(event) => setYieldMethod(event.target.value as YieldMethod)}>
+                <option value="anual">Taxa anual (% a.a.)</option>
+                <option value="mensal">Taxa mensal (% a.m.)</option>
+                <option value="diario">Taxa diária (% ao dia)</option>
+                <option value="cdi">Percentual do CDI (% do CDI)</option>
+                <option value="periodo">Taxa acumulada no período (%)</option>
+                <option value="valorFinal">Informar valor final fixo (R$)</option>
+              </select>
             </label>
           </div>
+          {yieldMethod === "valorFinal" ? <label>Montante final estimado (R$)
+            <input inputMode="decimal" value={fixedFinalValue} onChange={(event) => setFixedFinalValue(event.target.value)} placeholder="Ex.: 1.650,00"/>
+          </label> : <div className="form-grid">
+            <label>{yieldMethod === "cdi" ? "Percentual do CDI (%)" : yieldMethod === "periodo" ? "Rendimento total no período (%)" : "Taxa " + rateDescription}
+              <input inputMode="decimal" value={rate} onChange={(event) => setRate(event.target.value)} placeholder={yieldMethod === "cdi" ? "Ex.: 100" : "Ex.: 1,2"}/>
+            </label>
+            {yieldMethod === "cdi" && <label>CDI anual de referência (% a.a.)
+              <input inputMode="decimal" value={cdiRate} onChange={(event) => setCdiRate(event.target.value)} placeholder="Ex.: 14,90"/>
+            </label>}
+          </div>}
           <label>Tipo de resgate
             <select value={liquidity} onChange={(event) => setLiquidity(event.target.value as "imediata" | "vencimento")}>
               <option value="imediata">Liquidez imediata (posso resgatar antes)</option>
@@ -497,7 +561,7 @@ function InvestmentView({ balance }: { balance: number }) {
             <input type="date" min={today} value={targetDate} onChange={(event) => setTargetDate(event.target.value)}/>
           </label>
           {liquidity === "imediata" && <p className="investment-helper">Mesmo com liquidez imediata, o cálculo estima quanto poderia acumular se você optar por não resgatar até a data escolhida.</p>}
-          {!validInputs && <p className="investment-validation">Informe o nome, um capital maior que zero, uma taxa entre 0% e 100% e uma data de hoje em diante.</p>}
+          {!validInputs && <p className="investment-validation">Informe o nome, capital maior que zero, taxa válida para o método escolhido e uma data de hoje em diante.</p>}
         </div>
         <div className="investment-result">
           <span>Montante bruto estimado em {targetDate ? new Date(targetDate + "T12:00:00").toLocaleDateString("pt-BR") : "—"}</span>
@@ -506,33 +570,36 @@ function InvestmentView({ balance }: { balance: number }) {
         </div>
         <div className="formula">
           <span>Capital inicial</span><b>{validInputs ? money(capitalValue) : "—"}</b>
-          <span>Taxa informada</span><b>{Number.isFinite(rateValue) && rateValue >= 0 ? rateValue.toLocaleString("pt-BR", { maximumFractionDigits: 4 }) + "% a.a." : "—"}</b>
+          <span>Forma de rendimento</span><b>{methodLabels[yieldMethod]}</b>
+          <span>Taxa informada</span><b>{yieldMethod === "valorFinal" ? (Number.isFinite(fixedValue) && fixedValue >= 0 ? money(fixedValue) : "—") : (Number.isFinite(rateValue) && rateValue >= 0 ? rateValue.toLocaleString("pt-BR", { maximumFractionDigits: 4 }) + " " + rateDescription : "—")}</b>
+          {yieldMethod === "cdi" && <><span>CDI de referência</span><b>{Number.isFinite(cdiRateValue) && cdiRateValue > 0 ? cdiRateValue.toLocaleString("pt-BR", { maximumFractionDigits: 4 }) + "% a.a." : "—"}</b></>}
           <span>Resgate</span><b>{liquidity === "imediata" ? "Flexível" : "No vencimento"}</b>
           <span>Data de projeção</span><b>{targetDate ? new Date(targetDate + "T12:00:00").toLocaleDateString("pt-BR") : "—"}</b>
         </div>
         <button type="button" className="primary full investment-save-button" onClick={saveSimulation} disabled={!validInputs}>Salvar simulação</button>
-        <p className="investment-disclaimer">Estimativa matemática com juros compostos e taxa anual constante, calculada proporcionalmente aos dias (base de 365 dias). Valor bruto: não desconta IR, IOF, tarifas, inflação ou regras específicas do produto. Não é garantia de rentabilidade.</p>
+        <p className="investment-disclaimer">Estimativa matemática simplificada e bruta. Taxas mensal, diária e anual são compostas conforme o período indicado; a taxa acumulada é aplicada uma única vez; o valor final fixo é informado manualmente. A projeção de CDI é aproximada e usa o CDI anual de referência informado, sem reproduzir calendário de dias úteis nem regras específicas do produto. Não desconta IR, IOF, tarifas ou inflação e não garante rentabilidade.</p>
       </div>
       <div className="panel recommendation-panel">
-        <div className="panel-heading"><div><h2>Como interpretar</h2><p>Use os dados do produto financeiro real.</p></div></div>
+        <div className="panel-heading"><div><h2>Como interpretar</h2><p>Use as condições do produto financeiro real.</p></div></div>
         <ul>
-          <li>Informe a taxa anual oferecida pelo investimento e o capital que pretende aplicar.</li>
-          <li>Com liquidez imediata, escolha uma data futura para estimar quanto poderia acumular se mantiver o dinheiro investido até lá.</li>
-          <li>Em resgates no vencimento, selecione a data prevista no contrato.</li>
-          <li>Compare liquidez, risco, tributação, carência e eventuais condições de resgate antes de decidir.</li>
+          <li>O capital digitado fica salvo automaticamente neste navegador, mesmo antes de salvar uma simulação.</li>
+          <li>Escolha a periodicidade que corresponde à taxa divulgada pelo investimento.</li>
+          <li>Para percentual do CDI, informe a porcentagem contratada (por exemplo, 100%) e a taxa anual de CDI usada como referência; a estimativa é aproximada.</li>
+          <li>Em taxa acumulada no período, informe o rendimento total esperado para todo o intervalo selecionado.</li>
+          <li>Compare liquidez, risco, tributação, carência e condições de resgate antes de decidir.</li>
         </ul>
       </div>
     </div>
     <div className="panel saved-investments-panel">
-      <div className="panel-heading"><div><h2>Simulações salvas</h2><p>Ficam guardadas neste navegador para você consultar e comparar depois.</p></div></div>
+      <div className="panel-heading"><div><h2>Simulações salvas</h2><p>Ficam guardadas neste navegador para consulta e comparação.</p></div></div>
       {savedSimulations.length === 0 ? <div className="investment-empty">Nenhuma simulação salva. Preencha os dados acima e selecione “Salvar simulação”.</div> :
         <div className="saved-investment-list">{savedSimulations.map((item) => <div className="saved-investment-row" key={item.id}>
           <div className="saved-investment-name"><strong>{item.name}</strong><span>{item.liquidity === "imediata" ? "Liquidez imediata" : "Resgate no vencimento"} · até {new Date(item.targetDate + "T12:00:00").toLocaleDateString("pt-BR")}</span></div>
           <div><span>Capital</span><strong>{money(item.capital)}</strong></div>
-          <div><span>Taxa anual</span><strong>{item.annualRate.toLocaleString("pt-BR", { maximumFractionDigits: 4 })}%</strong></div>
+          <div><span>Rendimento</span><strong>{item.methodLabel || (item.annualRate ?? item.rate ?? 0).toLocaleString("pt-BR") + "% a.a."}</strong></div>
           <div><span>Rendimento bruto</span><strong className="saved-investment-gain">{money(item.estimatedGain)}</strong></div>
           <div><span>Montante projetado</span><strong>{money(item.projectedValue)}</strong></div>
-          <button type="button" className="saved-investment-delete" onClick={() => removeSimulation(item.id)} aria-label={"Excluir simulação de " + item.name}>Excluir</button>
+          <button type="button" className="icon-button danger" onClick={() => removeSimulation(item.id)} aria-label={"Excluir simulação " + item.name}><Icon name="trash"/></button>
         </div>)}</div>}
     </div>
   </section>;
