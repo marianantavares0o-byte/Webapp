@@ -331,7 +331,7 @@ export default function Home() {
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
         {tab === "receitas" && <IncomeView income={income} onAdd={() => { setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); setEditingIncome(null); setShowAddIncome(true); }} onEdit={startEditIncome} onDelete={deleteIncome} />}
         {tab === "investimentos" && <InvestmentView balance={balance} />}
-        {tab === "analise" && <AnalysisView expenses={expenses} income={income} expectedIncome={expectedIncome} />}
+        {tab === "analise" && <AnalysisView expenses={expenses} income={income} />}
 
         <footer>Nexo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
       </section>
@@ -605,51 +605,86 @@ function InvestmentView({ balance }: { balance: number }) {
   </section>;
 }
 
-function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[]; income: Income[]; expectedIncome:number }) {
+function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
   const [period, setPeriod] = useState<"mensal" | "semanal">("mensal");
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
   const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay());
+  const dayOfWeek = weekStart.getDay() || 7;
+  weekStart.setDate(weekStart.getDate() - dayOfWeek + 1);
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  const inferredYear = (month: number) => {
+    if (today.getMonth() === 0 && month === 12) return today.getFullYear() - 1;
+    if (today.getMonth() === 11 && month === 1) return today.getFullYear() + 1;
+    return today.getFullYear();
+  };
 
   const parseDayMonth = (value: string) => {
-    const match = value.match(/^(\\d{1,2})[\\/](\\d{1,2})/);
+    const match = value.trim().match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
     if (!match) return null;
-    const date = new Date(today.getFullYear(), Number(match[2]) - 1, Number(match[1]));
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = match[3] ? Number(match[3]) : inferredYear(month);
+    const date = new Date(year, month - 1, day);
+    if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) return null;
     date.setHours(0, 0, 0, 0);
     return date;
   };
 
-  const incomeStartDate = (value: string) => {
-    const match = value.match(/^(\\d{1,2})[–-](\\d{1,2})[\\/](\\d{1,2})/);
-    if (!match) return null;
-    const date = new Date(today.getFullYear(), Number(match[3]) - 1, Number(match[1]));
-    date.setHours(0, 0, 0, 0);
-    return date;
+  const parseIncomeRange = (value: string) => {
+    const text = value.trim();
+    const rangeMatch = text.match(/^(\d{1,2})[–-](\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+    if (rangeMatch) {
+      const startDay = Number(rangeMatch[1]);
+      const endDay = Number(rangeMatch[2]);
+      const month = Number(rangeMatch[3]);
+      const year = rangeMatch[4] ? Number(rangeMatch[4]) : inferredYear(month);
+      const start = new Date(year, month - 1, startDay);
+      const end = new Date(year, month - 1, endDay);
+      if (start.getMonth() !== month - 1 || end.getMonth() !== month - 1 || end < start) return null;
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      return { start, end };
+    }
+    const singleDate = parseDayMonth(text);
+    if (!singleDate) return null;
+    const end = new Date(singleDate);
+    end.setHours(23, 59, 59, 999);
+    return { start: singleDate, end };
   };
 
+  const expensesInMonth = expenses.filter((item) => {
+    const date = parseDayMonth(item.due);
+    return !date || (date >= monthStart && date <= monthEnd);
+  });
+  const incomeInMonth = income.filter((item) => {
+    const dates = parseIncomeRange(item.range);
+    return !dates || (dates.start <= monthEnd && dates.end >= monthStart);
+  });
   const incomeInWeek = income.filter((item) => {
-    const startDate = incomeStartDate(item.range);
-    if (!startDate) return false;
-    return startDate >= weekStart && startDate <= weekEnd;
+    const dates = parseIncomeRange(item.range);
+    return dates !== null && dates.start <= weekEnd && dates.end >= weekStart;
   });
-
   const expensesInWeek = expenses.filter((item) => {
-    const dueDate = parseDayMonth(item.due);
-    if (!dueDate) return false;
-    return dueDate >= weekStart && dueDate <= weekEnd;
+    const date = parseDayMonth(item.due);
+    return date !== null && date >= weekStart && date <= weekEnd;
   });
 
-  const totalExpenses = expenses.reduce((s,e)=>s+e.amount,0);
-  const essential = expenses.filter(e=>e.urgency !== "Baixa").reduce((s,e)=>s+e.amount,0);
-  const discretionary = expenses.filter(e=>e.urgency === "Baixa").reduce((s,e)=>s+e.amount,0);
-  const highUrgency = expenses.filter(e=>e.urgency === "Alta").reduce((s,e)=>s+e.amount,0);
+  const totalExpenses = expensesInMonth.reduce((s,e)=>s+e.amount,0);
+  const essential = expensesInMonth.filter(e=>e.urgency !== "Baixa").reduce((s,e)=>s+e.amount,0);
+  const discretionary = expensesInMonth.filter(e=>e.urgency === "Baixa").reduce((s,e)=>s+e.amount,0);
+  const highUrgency = expensesInMonth.filter(e=>e.urgency === "Alta").reduce((s,e)=>s+e.amount,0);
   const weeklyExpenseTotal = expensesInWeek.reduce((s,e)=>s+e.amount,0);
   const weeklyIncomeTotal = incomeInWeek.reduce((s,e)=>s+e.amount,0);
 
-  const projectedSavings = Math.max(0, expectedIncome - totalExpenses);
-  const savingsRate = expectedIncome ? Math.round(projectedSavings / expectedIncome * 100) : 0;
+  const monthlyIncomeTotal = incomeInMonth.reduce((s,e)=>s+e.amount,0);
+  const projectedSavings = monthlyIncomeTotal - totalExpenses;
+  const savingsRate = monthlyIncomeTotal ? Math.round(projectedSavings / monthlyIncomeTotal * 100) : 0;
   const weeklyProjectedBalance = weeklyIncomeTotal - weeklyExpenseTotal;
   const weeklyHighUrgency = expensesInWeek.filter(e=>e.urgency === "Alta").reduce((s,e)=>s+e.amount,0);
 
@@ -658,18 +693,18 @@ function AnalysisView({ expenses, income, expectedIncome }: { expenses: Expense[
   const investmentDays = 185;
   const investmentProjected = investmentPrincipal * Math.pow(1 + annualRate, investmentDays / 365);
   const investmentGain = investmentProjected - investmentPrincipal;
-  const incomeCoverage = totalExpenses ? Math.round(expectedIncome / totalExpenses * 100) : 100;
-  const weeklyIncomeCoverage = weeklyExpenseTotal ? Math.round(weeklyIncomeTotal / weeklyExpenseTotal * 100) : 100;
-  const periodExpenses = period === "semanal" ? expensesInWeek : expenses;
-  const periodIncome = period === "semanal" ? incomeInWeek : income;
-  const periodIncomeTotal = period === "semanal" ? weeklyIncomeTotal : expectedIncome;
+  const incomeCoverage = totalExpenses ? Math.round(monthlyIncomeTotal / totalExpenses * 100) : (monthlyIncomeTotal > 0 ? 100 : 0);
+  const weeklyIncomeCoverage = weeklyExpenseTotal ? Math.round(weeklyIncomeTotal / weeklyExpenseTotal * 100) : (weeklyIncomeTotal > 0 ? 100 : 0);
+  const periodExpenses = period === "semanal" ? expensesInWeek : expensesInMonth;
+  const periodIncome = period === "semanal" ? incomeInWeek : incomeInMonth;
+  const periodIncomeTotal = period === "semanal" ? weeklyIncomeTotal : monthlyIncomeTotal;
   const periodExpenseTotal = period === "semanal" ? weeklyExpenseTotal : totalExpenses;
   const periodBalance = period === "semanal" ? weeklyProjectedBalance : expectedIncome - totalExpenses;
   const periodHighUrgency = period === "semanal" ? weeklyHighUrgency : highUrgency;
   const periodIncomeCoverage = period === "semanal" ? weeklyIncomeCoverage : incomeCoverage;
   const periodLabel = period === "semanal"
     ? `${weekStart.toLocaleDateString("pt-BR")} a ${weekEnd.toLocaleDateString("pt-BR")}`
-    : "estimados no mês";
+    : today.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
   return (
     <section className="page-section general-analysis">
