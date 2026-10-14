@@ -69,7 +69,8 @@ function Icon({ name }: { name: string }) {
     chevron: "M9 18l6-6-6-6",
     target: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 17a5 5 0 100-10 5 5 0 000 10zM12 13a1 1 0 100-2 1 1 0 000 2z",
     chart: "M5 19V9M12 19V5M19 19v-7",
-    shield: "M12 3l7 3v5c0 4.5-2.8 8.2-7 10-4.2-1.8-7-5.5-7-10V6z"
+    shield: "M12 3l7 3v5c0 4.5-2.8 8.2-7 10-4.2-1.8-7-5.5-7-10V6z",
+    x: "M6 6l12 12M18 6L6 18"
   };
   return <svg viewBox="0 0 24 24" className="icon" aria-hidden="true"><path d={paths[name] || paths.grid} /></svg>;
 }
@@ -599,7 +600,7 @@ function InvestmentView({ balance }: { balance: number }) {
           <div><span>Rendimento</span><strong>{item.methodLabel || (item.annualRate ?? item.rate ?? 0).toLocaleString("pt-BR") + "% a.a."}</strong></div>
           <div><span>Rendimento bruto</span><strong className="saved-investment-gain">{money(item.estimatedGain)}</strong></div>
           <div><span>Montante projetado</span><strong>{money(item.projectedValue)}</strong></div>
-          <button type="button" className="icon-button danger" onClick={() => removeSimulation(item.id)} aria-label={"Excluir simulação " + item.name}><Icon name="trash"/></button>
+          <button type="button" className="icon-button danger" onClick={() => removeSimulation(item.id)} aria-label={"Excluir simulação " + item.name}><Icon name="x"/></button>
         </div>)}</div>}
     </div>
   </section>;
