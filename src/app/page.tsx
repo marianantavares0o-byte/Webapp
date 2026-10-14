@@ -50,23 +50,31 @@ type ExpenseAlert = {
 function getNextExpenseAlert(expenses: Expense[], referenceDate = new Date()): ExpenseAlert | null {
   const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
   const alerts = expenses.flatMap((expense) => {
-    if (expense.status !== "Pendente") return [];
-    const match = expense.due.match(/^(\d{1,2})\/(\d{1,2})$/);
+    if (expense.status !== "Pendente" || !expense.due?.trim()) return [];
+    const match = expense.due.trim().match(/^(\d{1,2})\/(\d{1,2})$/);
     if (!match) return [];
     const day = Number(match[1]);
     const month = Number(match[2]) - 1;
     if (month < 0 || month > 11 || day < 1 || day > 31) return [];
     let dueDate = new Date(today.getFullYear(), month, day, 12);
     if (dueDate.getMonth() !== month || dueDate.getDate() !== day) return [];
-    if (dueDate < today && month < today.getMonth()) {
+
+    // Datas de meses anteriores representam o próximo ciclo anual; datas já vencidas
+    // neste mês permanecem como pendências atrasadas, em vez de desaparecerem do alerta.
+    if (month < today.getMonth()) {
       dueDate = new Date(today.getFullYear() + 1, month, day, 12);
-    } else if (dueDate < today) {
-      return [];
     }
     const daysUntil = Math.round((dueDate.getTime() - today.getTime()) / 86400000);
     return [{ expense, daysUntil, dueDate }];
   });
-  alerts.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  // Primeiro prioriza pagamentos vencidos; entre eles, o vencimento mais antigo.
+  alerts.sort((a, b) => {
+    const aOverdue = a.daysUntil < 0;
+    const bOverdue = b.daysUntil < 0;
+    if (aOverdue && bOverdue) return a.dueDate.getTime() - b.dueDate.getTime();
+    if (aOverdue !== bOverdue) return aOverdue ? -1 : 1;
+    return a.dueDate.getTime() - b.dueDate.getTime();
+  });
   return alerts.length ? alerts[0] : null;
 }
 
@@ -342,7 +350,7 @@ function FinanceApp({ userId }: { userId: string }) {
                 onClick={() => setShowNotifications((open) => !open)}
               >
                 <Icon name="bell"/>
-                {expenses.some((expense) => expense.status === "Pendente" && expense.due.trim()) && <span className="notification-dot"/>}
+                {getNextExpenseAlert(expenses) && <span className="notification-dot"/>}
               </button>
               {showNotifications && (
                 <section className="notification-popover" aria-label="Alerta da próxima despesa">
@@ -358,8 +366,8 @@ function FinanceApp({ userId }: { userId: string }) {
                     return (
                       <div className="notification-income">
                         <div className="notification-countdown">
-                          <strong>{alert.daysUntil}</strong>
-                          <span>{alert.daysUntil === 1 ? "dia restante" : "dias restantes"}</span>
+                          <strong>{alert.daysUntil < 0 ? Math.abs(alert.daysUntil) : alert.daysUntil}</strong>
+                          <span>{alert.daysUntil < 0 ? (Math.abs(alert.daysUntil) === 1 ? "dia de atraso" : "dias de atraso") : alert.daysUntil === 1 ? "dia restante" : "dias restantes"}</span>
                         </div>
                         <div className="notification-income-copy">
                           <strong>{alert.expense.name}</strong>
@@ -367,9 +375,11 @@ function FinanceApp({ userId }: { userId: string }) {
                           <b className="notification-receive-amount">A pagar: {money(alert.expense.amount)}</b>
                         </div>
                         <p className="notification-message">
-                          {alert.daysUntil === 0
-                            ? "Esta despesa vence hoje."
-                            : `Faltam ${alert.daysUntil} ${alert.daysUntil === 1 ? "dia" : "dias"} para o vencimento desta despesa.`}
+                          {alert.daysUntil < 0
+                            ? `Esta despesa está vencida há ${Math.abs(alert.daysUntil)} ${Math.abs(alert.daysUntil) === 1 ? "dia" : "dias"}.`
+                            : alert.daysUntil === 0
+                              ? "Esta despesa vence hoje."
+                              : `Faltam ${alert.daysUntil} ${alert.daysUntil === 1 ? "dia" : "dias"} para o vencimento desta despesa.`}
                         </p>
                       </div>
                     );
