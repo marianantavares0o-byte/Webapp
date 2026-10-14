@@ -549,3 +549,5 @@ footer{color:#5f737e}
 .saved-investment-row .saved-investment-gain{color:#4fd1b5}
 .saved-investment-delete{border:1px solid #513338;background:#211619;color:#f0a39a;border-radius:7px;padding:7px 9px;font-size:10px;cursor:pointer}
 @media(max-width:900px){.saved-investment-row{grid-template-columns:repeat(2,minmax(0,1fr))}.saved-investment-name{grid-column:1/-1}.saved-investment-delete{justify-self:start}}
+
+.icon-button.danger{width:30px;height:30px;border-radius:8px;padding:0;background:#fff7f5;border:1px solid #f0d4d1;color:#c65c55;transition:background .15s ease,border-color .15s ease,color .15s ease}.icon-button.danger .icon{width:15px;height:15px;stroke:currentColor;stroke-width:2.2;fill:none}.icon-button.danger:hover{background:#fff0ee;border-color:#e7bcb7;color:#b94f48}
