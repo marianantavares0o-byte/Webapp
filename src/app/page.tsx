@@ -367,9 +367,9 @@ function IncomeView({ income, onAdd, onEdit, onDelete }: { income: Income[]; onA
   const total = income.reduce((sum, item) => sum + item.amount, 0);
   const largest = income.length ? Math.max(...income.map((item) => item.amount)) : 0;
   return <section className="page-section">
-    <div className="summary-strip"><div><span>Entradas estimadas</span><strong>{money(total)}</strong></div><div><span>Maior entrada</span><strong>{money(largest)}</strong></div><div><span>Receitas cadastradas</span><strong>{income.length}</strong></div></div>
+    <div className="summary-strip"><div><span>Entradas estimadas</span><strong>{money(total)}</strong></div><div><span>Maior entrada</span><strong>{money(largest)}</strong></div></div>
     <div className="panel">
-      <div className="panel-heading"><div><h2>Receitas futuras</h2><p>Gerencie a descrição, origem, período, valor e confiabilidade de cada entrada.</p></div><button type="button" className="primary small" onClick={onAdd}><Icon name="plus"/> Nova receita</button></div>
+      <div className="panel-heading"><div><h2>Todas as receitas <span className="expense-count">{income.length}</span></h2><p>Gerencie a descrição, origem, período, valor e confiabilidade de cada entrada.</p></div><button type="button" className="primary small" onClick={onAdd}><Icon name="plus"/> Nova receita</button></div>
       <div className="table income-table">
         <div className="table-head"><span>Receita</span><span>Origem</span><span>Recebimento</span><span>Confiabilidade</span><span>Valor</span><span>Ações</span></div>
         {income.length === 0 ? <div className="income-empty">Nenhuma receita cadastrada. Selecione “Nova receita” para adicionar uma entrada prevista.</div> : [...income].map((item) => (
