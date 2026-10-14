@@ -699,7 +699,7 @@ function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Incom
   const periodIncome = period === "semanal" ? incomeInWeek : incomeInMonth;
   const periodIncomeTotal = period === "semanal" ? weeklyIncomeTotal : monthlyIncomeTotal;
   const periodExpenseTotal = period === "semanal" ? weeklyExpenseTotal : totalExpenses;
-  const periodBalance = period === "semanal" ? weeklyProjectedBalance : expectedIncome - totalExpenses;
+  const periodBalance = period === "semanal" ? weeklyProjectedBalance : monthlyIncomeTotal - totalExpenses;
   const periodHighUrgency = period === "semanal" ? weeklyHighUrgency : highUrgency;
   const periodIncomeCoverage = period === "semanal" ? weeklyIncomeCoverage : incomeCoverage;
   const periodLabel = period === "semanal"
