@@ -51,7 +51,7 @@ function getNextExpenseAlert(expenses: Expense[], referenceDate = new Date()): E
   const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
   const alerts = expenses.flatMap((expense) => {
     if (expense.status !== "Pendente") return [];
-    const match = expense.due.match(/^(\\d{1,2})\\/(\\d{1,2})$/);
+    const match = expense.due.match(/^(\d{1,2})\/(\d{1,2})$/);
     if (!match) return [];
     const day = Number(match[1]);
     const month = Number(match[2]) - 1;
