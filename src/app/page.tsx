@@ -1125,7 +1125,7 @@ function AuthScreen() {
         <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "forgot" ? "Enviar instruções" : "Entrar"}</button>
       </form>
       <div className="auth-links">
-        {mode === "login" && <><button type="button" onClick={() => { setMode("signup"); setMessage(""); setErrorMessage(""); }}>Criar uma conta</button><button type="button" onClick={() => { setMode("forgot"); setMessage(""); setErrorMessage(""); }}>Esqueci minha senha</button></>}
+        {mode === "login" && <><button type="button" onClick={() => { setMode("signup"); setMessage(""); setErrorMessage(""); }}>Criar uma conta</button><button type="button" onClick={() => { window.location.href = "/esqueci-senha"; }}>Esqueci minha senha</button></>}
         {mode !== "login" && <button type="button" onClick={() => { setMode("login"); setMessage(""); setErrorMessage(""); }}>Voltar para entrar</button>}
       </div>
     </section>
