@@ -607,6 +607,18 @@ function InvestmentView({ balance }: { balance: number }) {
 
 function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
   const [period, setPeriod] = useState<"mensal" | "semanal">("mensal");
+  const [savedInvestments, setSavedInvestments] = useState<InvestmentSimulation[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("fluxo-investment-simulations");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setSavedInvestments(parsed);
+      }
+    } catch {
+      setSavedInvestments([]);
+    }
+  }, []);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -688,11 +700,20 @@ function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Incom
   const weeklyProjectedBalance = weeklyIncomeTotal - weeklyExpenseTotal;
   const weeklyHighUrgency = expensesInWeek.filter(e=>e.urgency === "Alta").reduce((s,e)=>s+e.amount,0);
 
-  const investmentPrincipal = 500;
-  const annualRate = 0.1198;
-  const investmentDays = 185;
-  const investmentProjected = investmentPrincipal * Math.pow(1 + annualRate, investmentDays / 365);
-  const investmentGain = investmentProjected - investmentPrincipal;
+  const investmentsInMonth = savedInvestments.filter((item) => {
+    if (!item.targetDate) return false;
+    const date = new Date(item.targetDate + "T00:00:00");
+    return !Number.isNaN(date.getTime()) && date >= monthStart && date <= monthEnd;
+  });
+  const investmentsInWeek = savedInvestments.filter((item) => {
+    if (!item.targetDate) return false;
+    const date = new Date(item.targetDate + "T00:00:00");
+    return !Number.isNaN(date.getTime()) && date >= weekStart && date <= weekEnd;
+  });
+  const periodInvestments = period === "semanal" ? investmentsInWeek : investmentsInMonth;
+  const investmentPrincipal = periodInvestments.reduce((sum, item) => sum + item.capital, 0);
+  const investmentProjected = periodInvestments.reduce((sum, item) => sum + item.projectedValue, 0);
+  const investmentGain = periodInvestments.reduce((sum, item) => sum + item.estimatedGain, 0);
   const incomeCoverage = totalExpenses ? Math.round(monthlyIncomeTotal / totalExpenses * 100) : (monthlyIncomeTotal > 0 ? 100 : 0);
   const weeklyIncomeCoverage = weeklyExpenseTotal ? Math.round(weeklyIncomeTotal / weeklyExpenseTotal * 100) : (weeklyIncomeTotal > 0 ? 100 : 0);
   const periodExpenses = period === "semanal" ? expensesInWeek : expensesInMonth;
@@ -779,19 +800,15 @@ function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Incom
 
         <div className="panel analysis-detail">
           <div className="panel-heading"><div><h2>Investimentos</h2><p>{period === "semanal" ? "Movimentações de investimentos que tenham ocorrência na semana." : "Acompanhe capital aplicado, prazo e retorno projetado."}</p></div><Icon name="trend"/></div>
-          {period === "semanal" ? (
-            <div className="investment-analysis-highlight">
-              <span>Movimentação na semana</span>
-              <strong>R$ 0,00</strong>
-              <small>Nenhum aporte, resgate ou vencimento de investimento está registrado para esta semana.</small>
-            </div>
-          ) : (
+          {periodInvestments.length ? (
             <>
-              <div className="investment-analysis-highlight"><span>Capital considerado</span><strong>{money(investmentPrincipal)}</strong><small>simulação a 11,98% a.a. por 185 dias</small></div>
+              <div className="investment-analysis-highlight"><span>Capital das simulações com vencimento no período</span><strong>{money(investmentPrincipal)}</strong><small>{periodInvestments.length} simulação(ões) considerada(s)</small></div>
               <div className="investment-analysis-row"><span>Valor projetado no vencimento</span><strong>{money(investmentProjected)}</strong></div>
-              <div className="investment-analysis-row"><span>Ganho bruto estimado</span><strong>{money(investmentGain)}</strong></div>
-              <div className="investment-analysis-row"><span>Participação do ganho sobre o capital</span><strong>{((investmentGain / investmentPrincipal) * 100).toFixed(2).replace(".", ",")}%</strong></div>
+              <div className="investment-analysis-row"><span>Ganho estimado</span><strong>{money(investmentGain)}</strong></div>
+              <div className="investment-analysis-row"><span>Retorno estimado sobre o capital</span><strong>{investmentPrincipal ? ((investmentGain / investmentPrincipal) * 100).toFixed(2).replace(".", ",") : "0,00"}%</strong></div>
             </>
+          ) : (
+            <div className="investment-analysis-highlight"><span>Sem vencimentos registrados</span><strong>{money(0)}</strong><small>Não há simulações salvas com vencimento neste período. Isso não significa que o saldo investido seja zero.</small></div>
           )}
         </div>
       </div>
