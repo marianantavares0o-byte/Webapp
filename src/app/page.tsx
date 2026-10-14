@@ -50,7 +50,7 @@ type IncomeAlert = {
 function getNextIncomeAlert(incomes: Income[], referenceDate = new Date()): IncomeAlert | null {
   const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
   const alerts = incomes.flatMap((item) => {
-    const match = item.range.match(/(\\d{1,2})\\s*(?:[–—-]\\s*(\\d{1,2}))?\\s*\\/\\s*(\\d{1,2})/);
+    const match = item.range.match(/(\d{1,2})\s*(?:[–—-]\s*(\d{1,2}))?\s*\/\s*(\d{1,2})/);
     if (!match) return [];
     const startDay = Number(match[1]);
     const endDay = Number(match[2] || match[1]);
