@@ -342,7 +342,7 @@ function FinanceApp({ userId }: { userId: string }) {
                 onClick={() => setShowNotifications((open) => !open)}
               >
                 <Icon name="bell"/>
-                {income.length > 0 && <span className="notification-dot"/>}
+                {expenses.some((expense) => expense.status === "Pendente" && expense.due.trim()) && <span className="notification-dot"/>}
               </button>
               {showNotifications && (
                 <section className="notification-popover" aria-label="Alerta da próxima despesa">
