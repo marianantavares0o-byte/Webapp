@@ -41,36 +41,34 @@ const initialIncome: Income[] = [
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type IncomeAlert = {
-  income: Income;
+type ExpenseAlert = {
+  expense: Expense;
   daysUntil: number;
-  inEstimatedWindow: boolean;
+  dueDate: Date;
 };
 
-function getNextIncomeAlert(incomes: Income[], referenceDate = new Date()): IncomeAlert | null {
+function getNextExpenseAlert(expenses: Expense[], referenceDate = new Date()): ExpenseAlert | null {
   const today = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate(), 12);
-  const alerts = incomes.flatMap((item) => {
-    const match = item.range.match(/(\d{1,2})\s*(?:[–—-]\s*(\d{1,2}))?\s*\/\s*(\d{1,2})/);
+  const alerts = expenses.flatMap((expense) => {
+    if (expense.status !== "Pendente") return [];
+    const match = expense.due.match(/^(\\d{1,2})\\/(\\d{1,2})$/);
     if (!match) return [];
-    const startDay = Number(match[1]);
-    const endDay = Number(match[2] || match[1]);
-    const month = Number(match[3]) - 1;
-    if (month < 0 || month > 11 || startDay < 1 || endDay < startDay) return [];
-
-    let start = new Date(today.getFullYear(), month, startDay, 12);
-    let end = new Date(today.getFullYear(), month, endDay, 12);
-    if (end < today) {
-      start = new Date(today.getFullYear() + 1, month, startDay, 12);
-      end = new Date(today.getFullYear() + 1, month, endDay, 12);
+    const day = Number(match[1]);
+    const month = Number(match[2]) - 1;
+    if (month < 0 || month > 11 || day < 1 || day > 31) return [];
+    let dueDate = new Date(today.getFullYear(), month, day, 12);
+    if (dueDate.getMonth() !== month || dueDate.getDate() !== day) return [];
+    if (dueDate < today && month < today.getMonth()) {
+      dueDate = new Date(today.getFullYear() + 1, month, day, 12);
+    } else if (dueDate < today) {
+      return [];
     }
-    const inEstimatedWindow = today >= start && today <= end;
-    const daysUntil = inEstimatedWindow ? 0 : Math.max(0, Math.round((start.getTime() - today.getTime()) / 86400000));
-    return [{ income: item, daysUntil, inEstimatedWindow, start }];
+    const daysUntil = Math.round((dueDate.getTime() - today.getTime()) / 86400000);
+    return [{ expense, daysUntil, dueDate }];
   });
-  alerts.sort((a, b) => a.daysUntil - b.daysUntil || a.start.getTime() - b.start.getTime());
+  alerts.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
   return alerts.length ? alerts[0] : null;
 }
-
 
 function NexoLogo({ compact = false }: { compact?: boolean }) {
   return (
@@ -339,7 +337,7 @@ function FinanceApp({ userId }: { userId: string }) {
               <button
                 type="button"
                 className="icon-button notification-button"
-                aria-label="Ver alerta do próximo recebimento"
+                aria-label="Ver alerta da próxima despesa"
                 aria-expanded={showNotifications}
                 onClick={() => setShowNotifications((open) => !open)}
               >
@@ -347,15 +345,15 @@ function FinanceApp({ userId }: { userId: string }) {
                 {income.length > 0 && <span className="notification-dot"/>}
               </button>
               {showNotifications && (
-                <section className="notification-popover" aria-label="Alerta de receita futura">
+                <section className="notification-popover" aria-label="Alerta da próxima despesa">
                   <div className="notification-popover-head">
-                    <div><span className="notification-kicker">ENTRADA DE DINHEIRO</span><h2>Próximo recebimento</h2></div>
+                    <div><span className="notification-kicker">PRÓXIMA DESPESA</span><h2>Próximo pagamento</h2></div>
                     <button type="button" className="notification-close" aria-label="Fechar alerta" onClick={() => setShowNotifications(false)}>×</button>
                   </div>
                   {(() => {
-                    const alert = getNextIncomeAlert(income);
+                    const alert = getNextExpenseAlert(expenses);
                     if (!alert) {
-                      return <div className="notification-empty"><p>Não encontrei uma data de recebimento válida nas suas receitas.</p><button type="button" onClick={() => { setShowNotifications(false); setTab("receitas"); }}>Ver receitas</button></div>;
+                      return <div className="notification-empty"><p>Não há despesas pendentes com vencimento futuro cadastrado.</p><button type="button" onClick={() => { setShowNotifications(false); setTab("gastos"); }}>Ver despesas</button></div>;
                     }
                     return (
                       <div className="notification-income">
@@ -364,21 +362,19 @@ function FinanceApp({ userId }: { userId: string }) {
                           <span>{alert.daysUntil === 1 ? "dia restante" : "dias restantes"}</span>
                         </div>
                         <div className="notification-income-copy">
-                          <strong>{alert.income.name}</strong>
-                          <span>Previsão: {alert.income.range}</span>
-                          <b className="notification-receive-amount">A receber: {money(alert.income.amount)}</b>
+                          <strong>{alert.expense.name}</strong>
+                          <span>Vencimento: {alert.dueDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>
+                          <b className="notification-receive-amount">A pagar: {money(alert.expense.amount)}</b>
                         </div>
                         <p className="notification-message">
-                          {alert.inEstimatedWindow
-                            ? "Você está dentro do período estimado para receber esse valor."
-                            : alert.daysUntil === 0
-                              ? "Este valor está previsto para entrar hoje."
-                              : `Faltam ${alert.daysUntil} dias para o início do período estimado de recebimento.`}
+                          {alert.daysUntil === 0
+                            ? "Esta despesa vence hoje."
+                            : `Faltam ${alert.daysUntil} ${alert.daysUntil === 1 ? "dia" : "dias"} para o vencimento desta despesa.`}
                         </p>
                       </div>
                     );
                   })()}
-                  <button type="button" className="notification-footer" onClick={() => { setShowNotifications(false); setTab("receitas"); }}>Ver receitas cadastradas</button>
+                  <button type="button" className="notification-footer" onClick={() => { setShowNotifications(false); setTab("gastos"); }}>Ver despesas cadastradas</button>
                 </section>
               )}
             </div>
