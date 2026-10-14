@@ -296,6 +296,7 @@ function FinanceApp({ userId }: { userId: string }) {
         ))}</nav>
         <div className="sidebar-bottom">
           <div className="mini-card"><Icon name="shield"/><div><strong>Controle ativo</strong><span>Dados organizados</span></div></div>
+          <button className="auth-signout" type="button" onClick={() => { void supabase.auth.signOut(); }}>Sair da conta</button>
         </div>
       </aside>
 
