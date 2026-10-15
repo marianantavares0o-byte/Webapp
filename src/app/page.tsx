@@ -440,7 +440,7 @@ function FinanceApp({ userId }: { userId: string }) {
                       <strong className="commitment-value">{money(e.amount)}</strong>
                     </div>
                   ))}
-                  <div className="commitments-total"><span>Total de gastos pendentes</span><strong>{money(totalPending)}</strong></div>                </div>
+                  <div className="commitments-total"><span>Somatório dos valores pendentes</span><strong>{money(totalPending)}</strong></div>                </div>
               </div>
 
               <div className="panel calendar-panel">
