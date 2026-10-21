@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/neon/client";
 
 function ResetPage(){
   const params=useSearchParams(); const [email,setEmail]=useState(params.get("email")||""); const [token,setToken]=useState(""); const [password,setPassword]=useState(""); const [confirm,setConfirm]=useState("");
