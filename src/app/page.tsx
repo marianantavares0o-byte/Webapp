@@ -123,13 +123,13 @@ function FinanceApp({ userId }: { userId: string }) {
   const [showAddIncome, setShowAddIncome] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
-  const supabase = createClient();
+  const neonClient = createClient();
 
   useEffect(() => {
     let cancelled = false;
     async function loadFinancialData() {
       try {
-        const { data: cloudRow, error } = await supabase
+        const { data: cloudRow, error } = await neonClient
           .from("user_financial_data")
           .select("data")
           .eq("user_id", userId)
@@ -155,7 +155,7 @@ function FinanceApp({ userId }: { userId: string }) {
           if (Array.isArray(legacy.expenses)) setExpenses(legacy.expenses);
           if (Array.isArray(legacy.income)) setIncome(legacy.income);
           if (typeof legacy.balance === "number" && Number.isFinite(legacy.balance)) setBalance(legacy.balance);
-          const { error: saveError } = await supabase.from("user_financial_data").upsert({
+          const { error: saveError } = await neonClient.from("user_financial_data").upsert({
             user_id: userId, section: "main", data: legacy, updated_at: new Date().toISOString()
           }, { onConflict: "user_id,section" });
           if (saveError) throw saveError;
@@ -185,7 +185,7 @@ function FinanceApp({ userId }: { userId: string }) {
     localStorage.setItem("fluxo-income", JSON.stringify(income));
     localStorage.setItem("fluxo-balance", String(balance));
     const timer = setTimeout(async () => {
-      const { error } = await supabase.from("user_financial_data").upsert({
+      const { error } = await neonClient.from("user_financial_data").upsert({
         user_id: userId,
         section: "main",
         data: { expenses, income, balance },
@@ -333,7 +333,7 @@ function FinanceApp({ userId }: { userId: string }) {
         ))}</nav>
         <div className="sidebar-bottom">
           <div className="mini-card"><Icon name="shield"/><div><strong>Controle ativo</strong><span>Dados organizados</span></div></div>
-          <button className="auth-signout" type="button" onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}>Sair da conta</button>
+          <button className="auth-signout" type="button" onClick={async () => { await neonClient.auth.signOut(); window.location.href = "/"; }}>Sair da conta</button>
         </div>
       </aside>
 
@@ -558,7 +558,7 @@ function parseInvestmentNumber(value: string) {
 }
 
 function InvestmentView({ balance, userId }: { balance: number; userId: string }) {
-  const supabase = createClient();
+  const neonClient = createClient();
   const [name, setName] = useState("");
   const [capital, setCapital] = useState("");
   const [yieldMethod, setYieldMethod] = useState<YieldMethod>("anual");
@@ -612,7 +612,7 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
     let cancelled = false;
     async function loadInvestmentData() {
       try {
-        const { data: cloudRow, error } = await supabase
+        const { data: cloudRow, error } = await neonClient
           .from("user_financial_data")
           .select("data")
           .eq("user_id", userId)
@@ -631,7 +631,7 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
           const localDraft = localStorage.getItem("fluxo-investment-draft");
           if (localSaved) savedSimulationsValue = JSON.parse(localSaved);
           if (localDraft) draftValue = JSON.parse(localDraft);
-          const { error: saveError } = await supabase.from("user_financial_data").upsert({
+          const { error: saveError } = await neonClient.from("user_financial_data").upsert({
             user_id: userId,
             section: "investments",
             data: { savedSimulations: savedSimulationsValue, draft: draftValue || { name: "", capital: "", yieldMethod: "anual", rate: "11,98", cdiRate: "14,90", fixedFinalValue: "", liquidity: "imediata", targetDate } },
@@ -679,7 +679,7 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
     localStorage.setItem("fluxo-investment-simulations", JSON.stringify(savedSimulations));
     localStorage.setItem("fluxo-investment-draft", JSON.stringify(draft));
     const timer = setTimeout(async () => {
-      const { error } = await supabase.from("user_financial_data").upsert({
+      const { error } = await neonClient.from("user_financial_data").upsert({
         user_id: userId,
         section: "investments",
         data: { savedSimulations, draft },
@@ -1155,7 +1155,7 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
 type AuthMode = "login" | "signup" | "forgot";
 
 function AuthScreen() {
-  const supabase = createClient();
+  const neonClient = createClient();
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -1170,7 +1170,7 @@ function AuthScreen() {
     setErrorMessage("");
     try {
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data, error } = await neonClient.auth.signUp({ email: email.trim(), password });
         if (error) throw error;
         if (data.session) {
           window.location.href = "/";
@@ -1179,13 +1179,13 @@ function AuthScreen() {
         setMessage("A conta foi criada, mas a sessão não foi iniciada automaticamente. Entre com seu e-mail e senha.");
         setMode("login");
       } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        const { error } = await neonClient.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: window.location.origin
         });
         if (error) throw error;
         setMessage("Se houver uma conta para esse e-mail, enviaremos as instruções de recuperação.");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        const { error } = await neonClient.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
         window.location.href = "/";
       }
@@ -1207,7 +1207,7 @@ function AuthScreen() {
         <input id="nexo-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="voce@exemplo.com" />
         {mode !== "forgot" && <>
           <label htmlFor="nexo-password">Senha</label>
-          <input id="nexo-password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo de 6 caracteres" />
+          <input id="nexo-password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo de 8 caracteres" />
         </>}
         {message && <p className="auth-success" role="status">{message}</p>}
         {errorMessage && <p className="auth-error" role="alert">{errorMessage}</p>}
@@ -1222,18 +1222,18 @@ function AuthScreen() {
 }
 
 export default function Home() {
-  const supabase = createClient();
+  const neonClient = createClient();
   const [sessionChecked, setSessionChecked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
+    neonClient.auth.getSession().then(({ data }) => {
       if (mounted) {
         setUserId(data.session?.user.id ?? null);
         setSessionChecked(true);
       }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = neonClient.auth.onAuthStateChange((_event, session) => {
       if (mounted) {
         setUserId(session?.user.id ?? null);
         setSessionChecked(true);
