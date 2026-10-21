@@ -9,7 +9,7 @@ export function createClient() {
       throw new Error("A variável NEXT_PUBLIC_NEON_DATABASE_URL não está configurada.");
     }
     client = createNeonClient(databaseUrl, {
-      auth: { adapter: SupabaseAuthAdapter() },
+      auth: { adapter: SupabaseAuthAdapter },
     });
   }
   return client;
