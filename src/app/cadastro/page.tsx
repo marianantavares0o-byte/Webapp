@@ -26,7 +26,7 @@ export default function CadastroPage() {
       <label>Confirmar senha<input type="password" required minLength={5} maxLength={20} value={confirm} onChange={e=>setConfirm(e.target.value)} autoComplete="new-password"/></label>
       {error&&<p className="auth-error">{error}</p>}{message&&<p className="auth-success">{message}</p>}
       <button className="primary auth-submit" disabled={loading}>{loading?"Criando...":"Criar conta"}</button>
-      <Link className="auth-link" href="/login">Já tenho uma conta</Link>
+      <Link className="auth-link" href="/">Já tenho uma conta</Link>
     </form>
   </section></main>;
 }
