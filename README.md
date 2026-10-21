@@ -1,23 +1,24 @@
-# Fluxo — Controle financeiro
+# Nexo — Controle financeiro
 
-Novo ponto de partida para o projeto de controle de gastos.
+Aplicação de controle financeiro pessoal construída com Next.js, React e TypeScript.
 
-## Objetivo
-O Fluxo organiza saldo atual, receitas futuras estimadas, despesas por urgência, alertas de prazo, simulação de investimentos, análise semanal e análise mensal.
+## Funcionalidades
+- Saldo disponível, receitas previstas e despesas por urgência.
+- Alertas de vencimento, simulação de investimentos e análise semanal/mensal.
+- Cadastro e login por e-mail e senha, com sessão persistente.
+- Dados financeiros salvos na nuvem e isolados por usuário.
 
 ## Stack
 - Next.js + React + TypeScript
-- CSS próprio, sem dependências de UI
-- Estado local nesta primeira versão
+- Neon PostgreSQL + Neon Managed Auth (Better Auth)
+- Neon Data API via SDK compatível com as chamadas de autenticação e consulta usadas na versão anterior
+- Vercel para hospedagem
 
-## Próximas etapas
-1. Persistência em banco de dados.
-2. Autenticação segura.
-3. Cadastro de receitas, gastos e metas.
-4. Motor de prioridade considerando saldo, datas, urgência e entradas futuras.
-5. Alertas de vencimento e prazo de compras.
-6. Integração com investimentos e cálculo por produto.
-7. Deploy e domínio na Vercel.
+## Configuração
+1. Configure `NEXT_PUBLIC_NEON_DATABASE_URL` na Vercel e no arquivo `.env.local` para desenvolvimento. Use apenas a URL HTTPS pública do endpoint, sem credenciais SQL.
+2. No Neon, mantenha o Managed Auth ativo e a confirmação de e-mail desativada para permitir acesso imediato após o cadastro.
+3. A tabela `public.user_financial_data` deve ter Row Level Security habilitada e políticas que restrinjam SELECT/INSERT/UPDATE/DELETE ao usuário autenticado correspondente.
+4. Instale dependências com `npm install` e execute `npm run dev`. Valide cadastro, login, recarga da página, salvamento e isolamento com duas contas de teste antes de promover a migração à produção.
 
-## Regra de produto
-Estimativas devem ser apresentadas como estimativas. O sistema não deve tratar renda futura incerta como dinheiro já disponível e não deve recomendar investimento que comprometa despesas essenciais.
+## Migração de contas
+Senhas e sessões do antigo provedor não são transferidas. Usuários existentes devem criar novas contas no Neon. Dados financeiros antigos não devem ser associados automaticamente por e-mail sem um processo explícito e verificado de recuperação da conta.
