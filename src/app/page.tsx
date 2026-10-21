@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/neon/client";
 
 type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
 
@@ -333,7 +333,7 @@ function FinanceApp({ userId }: { userId: string }) {
         ))}</nav>
         <div className="sidebar-bottom">
           <div className="mini-card"><Icon name="shield"/><div><strong>Controle ativo</strong><span>Dados organizados</span></div></div>
-          <button className="auth-signout" type="button" onClick={() => { void supabase.auth.signOut(); }}>Sair da conta</button>
+          <button className="auth-signout" type="button" onClick={async () => { await supabase.auth.signOut(); window.location.href = "/"; }}>Sair da conta</button>
         </div>
       </aside>
 
@@ -1172,10 +1172,12 @@ function AuthScreen() {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
         if (error) throw error;
-        setMessage(data.session
-          ? "Conta criada. Você já pode usar o Nexo."
-          : "Conta criada. Verifique seu e-mail para confirmar o cadastro antes de entrar.");
-        if (!data.session) setMode("login");
+        if (data.session) {
+          window.location.href = "/";
+          return;
+        }
+        setMessage("A conta foi criada, mas a sessão não foi iniciada automaticamente. Entre com seu e-mail e senha.");
+        setMode("login");
       } else if (mode === "forgot") {
         const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: window.location.origin
@@ -1185,6 +1187,7 @@ function AuthScreen() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
+        window.location.href = "/";
       }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Não foi possível concluir a operação.");
