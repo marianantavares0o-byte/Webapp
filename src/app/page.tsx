@@ -24,19 +24,9 @@ type Income = {
   confidence: "Alta" | "Média" | "Baixa";
 };
 
-const initialExpenses: Expense[] = [
-  { id: 1, name: "Aluguel", category: "Moradia", amount: 1200, due: "10/10", urgency: "Alta", status: "Pendente" },
-  { id: 2, name: "Conta de energia", category: "Casa", amount: 184, due: "12/10", urgency: "Alta", status: "Pendente" },
-  { id: 3, name: "Internet", category: "Casa", amount: 109, due: "15/10", urgency: "Média", status: "Pendente" },
-  { id: 4, name: "Curso", category: "Educação", amount: 240, due: "18/10", urgency: "Média", status: "Pendente" },
-  { id: 5, name: "Jantar", category: "Lazer", amount: 120, due: "19/10", urgency: "Baixa", status: "Pendente" }
-];
+const initialExpenses: Expense[] = [];
 
-const initialIncome: Income[] = [
-  { id: 1, name: "Salário", source: "Empregador", amount: 3200, range: "13–15/10", confidence: "Alta" },
-  { id: 2, name: "Freelance", source: "Cliente de projeto", amount: 600, range: "20–25/10", confidence: "Média" },
-  { id: 3, name: "Reembolso", source: "Empresa responsável", amount: 180, range: "28–31/10", confidence: "Baixa" }
-];
+const initialIncome: Income[] = [];
 
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -117,7 +107,7 @@ function FinanceApp({ userId }: { userId: string }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income, setIncome] = useState(initialIncome);
-  const [balance, setBalance] = useState(2450);
+  const [balance, setBalance] = useState(0);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
@@ -143,34 +133,16 @@ function FinanceApp({ userId }: { userId: string }) {
           if (Array.isArray(saved.income)) setIncome(saved.income);
           if (typeof saved.balance === "number") setBalance(saved.balance);
         } else {
-          // Migra os dados locais existentes para a conta na primeira utilização.
-          const savedExpenses = localStorage.getItem("fluxo-expenses");
-          const savedIncome = localStorage.getItem("fluxo-income");
-          const savedBalance = localStorage.getItem("fluxo-balance");
-          const legacy = {
-            expenses: savedExpenses ? JSON.parse(savedExpenses) as Expense[] : initialExpenses,
-            income: savedIncome ? JSON.parse(savedIncome) as Income[] : initialIncome,
-            balance: savedBalance ? Number(savedBalance) : 2450
-          };
-          if (Array.isArray(legacy.expenses)) setExpenses(legacy.expenses);
-          if (Array.isArray(legacy.income)) setIncome(legacy.income);
-          if (typeof legacy.balance === "number" && Number.isFinite(legacy.balance)) setBalance(legacy.balance);
+          // Novas contas começam vazias; não importa dados locais que podem pertencer a outro usuário.
+          const emptyData = { expenses: initialExpenses, income: initialIncome, balance: 0 };
           const { error: saveError } = await supabase.from("user_financial_data").upsert({
-            user_id: userId, section: "main", data: legacy, updated_at: new Date().toISOString()
+            user_id: userId, section: "main", data: emptyData, updated_at: new Date().toISOString()
           }, { onConflict: "user_id,section" });
           if (saveError) throw saveError;
         }
       } catch (error) {
         console.error("Não foi possível carregar os dados financeiros da nuvem:", error);
-        // Mantém os dados locais como alternativa caso a conexão falhe.
-        try {
-          const savedExpenses = localStorage.getItem("fluxo-expenses");
-          const savedIncome = localStorage.getItem("fluxo-income");
-          const savedBalance = localStorage.getItem("fluxo-balance");
-          if (savedExpenses) setExpenses(JSON.parse(savedExpenses));
-          if (savedIncome) setIncome(JSON.parse(savedIncome));
-          if (savedBalance) setBalance(Number(savedBalance));
-        } catch {}
+        // Não carrega dados locais compartilhados entre contas; os dados financeiros ficam vinculados ao usuário na nuvem.
       } finally {
         if (!cancelled) setStorageLoaded(true);
       }
@@ -181,9 +153,6 @@ function FinanceApp({ userId }: { userId: string }) {
 
   useEffect(() => {
     if (!storageLoaded) return;
-    localStorage.setItem("fluxo-expenses", JSON.stringify(expenses));
-    localStorage.setItem("fluxo-income", JSON.stringify(income));
-    localStorage.setItem("fluxo-balance", String(balance));
     const timer = setTimeout(async () => {
       const { error } = await supabase.from("user_financial_data").upsert({
         user_id: userId,
@@ -204,7 +173,7 @@ function FinanceApp({ userId }: { userId: string }) {
   const totalPending = pending.reduce((sum, e) => sum + e.amount, 0);
   const expectedIncome = income.reduce((sum, e) => sum + e.amount, 0);
   const projectedBalance = balance + expectedIncome - totalPending;
-  const savingsRate = Math.max(0, Math.min(100, Math.round(((projectedBalance - 800) / Math.max(1, expectedIncome)) * 100)));
+  const savingsRate = expectedIncome > 0 ? Math.max(0, Math.min(100, Math.round((projectedBalance / expectedIncome) * 100))) : 0;
 
   const nextPayment = [...pending].filter((e) => e.due.trim()).sort((a, b) => a.due.localeCompare(b.due))[0];
 
@@ -400,19 +369,15 @@ function FinanceApp({ userId }: { userId: string }) {
                 <strong className="balance">{money(balance)}</strong>
                 <p className="balance-caption">Valor livre para decisões financeiras antes dos próximos compromissos.</p>
                 <div className="balance-meta"><span>Saldo projetado após entradas e pagamentos</span><strong>{money(projectedBalance)}</strong></div>
-                <div className="progress"><span style={{ width: Math.min(100, Math.max(8, (balance / 5000) * 100)) + "%" }}/></div>
+                <div className="progress"><span style={{ width: Math.min(100, Math.max(0, (balance / Math.max(1, balance + totalPending)) * 100)) + "%" }}/></div>
               </div>
 
               <div className="panel allocation-panel">
-                <div className="panel-heading"><div><h2>Destino do dinheiro</h2><p>Distribuição sugerida para manter equilíbrio entre obrigações, segurança e crescimento.</p></div><Icon name="target"/></div>
-                <div className="allocation-layout">
-                  <div className="donut-chart"><div className="donut-center"><strong>100%</strong><span>planejado</span></div></div>
-                  <div className="allocation-legend">
-                    <div><i className="allocation-dot essential"/> <span>Pagamentos essenciais</span><strong>55%</strong></div>
-                    <div><i className="allocation-dot reserve"/> <span>Reserva e liquidez</span><strong>20%</strong></div>
-                    <div><i className="allocation-dot investment"/> <span>Investimentos</span><strong>15%</strong></div>
-                    <div><i className="allocation-dot flexible"/> <span>Pequenos gastos</span><strong>10%</strong></div>
-                  </div>
+                <div className="panel-heading"><div><h2>Resumo financeiro</h2><p>Valores calculados com base nas informações que você cadastrar.</p></div><Icon name="target"/></div>
+                <div className="allocation-legend">
+                  <div><span>Saldo disponível</span><strong>{money(balance)}</strong></div>
+                  <div><span>Despesas pendentes</span><strong>{money(totalPending)}</strong></div>
+                  <div><span>Receitas previstas</span><strong>{money(expectedIncome)}</strong></div>
                 </div>
               </div>
             </section>
@@ -427,7 +392,7 @@ function FinanceApp({ userId }: { userId: string }) {
                   {[...pending].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).map((e) => (
                     <div className="commitment-card" key={e.id}>
                       <div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}>
-                        <strong>{e.due ? e.due.split("/")[0] : "—"}</strong><span>{e.due ? "OUT" : "SEM DATA"}</span>
+                        <strong>{e.due ? e.due.split("/")[0] : "—"}</strong><span>{e.due ? new Date(2000, Number(e.due.split("/")[1]) - 1, 1).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase() : "SEM DATA"}</span>
                       </div>
                       <div className="commitment-main">
                         <div className="commitment-title"><strong>{e.name}</strong><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span></div>
@@ -460,7 +425,7 @@ function FinanceApp({ userId }: { userId: string }) {
                 </div>
               </div>
               <div className="feedback-metrics">
-                <div><span>Margem projetada</span><strong>{savingsRate}%</strong><small>após uma reserva-base de R$ 800</small></div>
+                <div><span>Margem projetada</span><strong>{savingsRate}%</strong><small>margem projetada sobre as entradas previstas</small></div>
                 <div><span>Cobertura dos compromissos</span><strong>{projectedCoverage}%</strong><small>saldo + entradas ÷ gastos pendentes</small></div>
                 <div><span>Saldo após urgentes</span><strong>{money(balanceAfterHighPriority)}</strong><small>antes das demais despesas</small></div>
               </div>
@@ -471,7 +436,7 @@ function FinanceApp({ userId }: { userId: string }) {
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
         {tab === "receitas" && <IncomeView income={income} onAdd={() => { setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); setEditingIncome(null); setShowAddIncome(true); }} onEdit={startEditIncome} onDelete={deleteIncome} />}
         {tab === "investimentos" && <InvestmentView balance={balance} userId={userId} />}
-        {tab === "analise" && <AnalysisView expenses={expenses} income={income} />}
+        {tab === "analise" && <AnalysisView expenses={expenses} income={income} userId={userId} />}
 
         <footer>Nexo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
       </section>
@@ -480,15 +445,15 @@ function FinanceApp({ userId }: { userId: string }) {
           {(showAddIncome || editingIncome) ? (
             <>
               <div className="modal-head"><div><p className="eyebrow">{editingIncome ? "EDITAR RECEITA" : "NOVA RECEITA"}</p><h2>{editingIncome ? "Alterar receita" : "Adicionar receita"}</h2></div><button className="close" onClick={() => { setShowAddIncome(false); setEditingIncome(null); setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); }}>×</button></div>
-              <label>Descrição da receita<input value={newIncome.name} onChange={(e) => setNewIncome({...newIncome, name:e.target.value})} placeholder="Ex.: salário, freelance, aluguel recebido"/></label>
-              <label>Origem da receita<input value={newIncome.source} onChange={(e) => setNewIncome({...newIncome, source:e.target.value})} placeholder="Ex.: empresa, cliente ou pessoa"/></label>
-              <div className="form-grid"><label>Valor<input inputMode="decimal" value={newIncome.amount} onChange={(e) => setNewIncome({...newIncome, amount:e.target.value})} placeholder="0,00"/></label><label>Dia ou período<input value={newIncome.day} onChange={(e) => setNewIncome({...newIncome, day:e.target.value})} placeholder="Ex.: 13/10 ou 13–15/10"/></label></div>
+              <label>Descrição da receita<input value={newIncome.name} onChange={(e) => setNewIncome({...newIncome, name:e.target.value})} placeholder="Descrição da receita"/></label>
+              <label>Origem da receita<input value={newIncome.source} onChange={(e) => setNewIncome({...newIncome, source:e.target.value})} placeholder="Origem da receita"/></label>
+              <div className="form-grid"><label>Valor<input inputMode="decimal" value={newIncome.amount} onChange={(e) => setNewIncome({...newIncome, amount:e.target.value})} placeholder="0,00"/></label><label>Dia ou período<input value={newIncome.day} onChange={(e) => setNewIncome({...newIncome, day:e.target.value})} placeholder="DD/MM ou período previsto"/></label></div>
               <label>Confiabilidade<select value={newIncome.confidence} onChange={(e) => setNewIncome({...newIncome, confidence:e.target.value as Income["confidence"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label>
               <button className="primary full" onClick={editingIncome ? saveEditedIncome : addIncome}>{editingIncome ? "Salvar alterações" : "Adicionar receita"}</button>
             </>
           ) : (
             <>
-              <div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Ex.: passagem aérea"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Opcional"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="Opcional — ex.: 15/10"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button>
+              <div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Descrição da despesa"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Opcional"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="DD/MM (opcional)"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button>
             </>
           )}
         </div></div>}
@@ -562,15 +527,11 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
   const [name, setName] = useState("");
   const [capital, setCapital] = useState("");
   const [yieldMethod, setYieldMethod] = useState<YieldMethod>("anual");
-  const [rate, setRate] = useState("11,98");
-  const [cdiRate, setCdiRate] = useState("14,90");
+  const [rate, setRate] = useState("");
+  const [cdiRate, setCdiRate] = useState("");
   const [fixedFinalValue, setFixedFinalValue] = useState("");
   const [liquidity, setLiquidity] = useState<"imediata" | "vencimento">("imediata");
-  const [targetDate, setTargetDate] = useState(() => {
-    const date = new Date();
-    date.setFullYear(date.getFullYear() + 1);
-    return localDateString(date);
-  });
+  const [targetDate, setTargetDate] = useState("");
   const [savedSimulations, setSavedSimulations] = useState<InvestmentSimulation[]>([]);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const today = localDateString(new Date());
@@ -627,14 +588,11 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
           if (Array.isArray(saved.savedSimulations)) savedSimulationsValue = saved.savedSimulations;
           if (saved.draft && typeof saved.draft === "object") draftValue = saved.draft;
         } else {
-          const localSaved = localStorage.getItem("fluxo-investment-simulations");
-          const localDraft = localStorage.getItem("fluxo-investment-draft");
-          if (localSaved) savedSimulationsValue = JSON.parse(localSaved);
-          if (localDraft) draftValue = JSON.parse(localDraft);
+          draftValue = { name: "", capital: "", yieldMethod: "anual", rate: "", cdiRate: "", fixedFinalValue: "", liquidity: "imediata", targetDate: "" };
           const { error: saveError } = await supabase.from("user_financial_data").upsert({
             user_id: userId,
             section: "investments",
-            data: { savedSimulations: savedSimulationsValue, draft: draftValue || { name: "", capital: "", yieldMethod: "anual", rate: "11,98", cdiRate: "14,90", fixedFinalValue: "", liquidity: "imediata", targetDate } },
+            data: { savedSimulations: savedSimulationsValue, draft: draftValue },
             updated_at: new Date().toISOString()
           }, { onConflict: "user_id,section" });
           if (saveError) throw saveError;
@@ -653,18 +611,7 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
         }
       } catch (error) {
         console.error("Não foi possível carregar as simulações da nuvem:", error);
-        try {
-          const saved = localStorage.getItem("fluxo-investment-simulations");
-          if (saved) setSavedSimulations(JSON.parse(saved));
-          const draft = localStorage.getItem("fluxo-investment-draft");
-          if (draft) {
-            const parsed = JSON.parse(draft);
-            if (typeof parsed.name === "string") setName(parsed.name);
-            if (typeof parsed.capital === "string") setCapital(parsed.capital);
-            if (typeof parsed.rate === "string") setRate(parsed.rate);
-            if (typeof parsed.cdiRate === "string") setCdiRate(parsed.cdiRate);
-          }
-        } catch {}
+        // Não reutiliza simulações locais compartilhadas entre contas.
       } finally {
         if (!cancelled) setStorageLoaded(true);
       }
@@ -676,8 +623,6 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
   useEffect(() => {
     if (!storageLoaded) return;
     const draft = { name, capital, yieldMethod, rate, cdiRate, fixedFinalValue, liquidity, targetDate };
-    localStorage.setItem("fluxo-investment-simulations", JSON.stringify(savedSimulations));
-    localStorage.setItem("fluxo-investment-draft", JSON.stringify(draft));
     const timer = setTimeout(async () => {
       const { error } = await supabase.from("user_financial_data").upsert({
         user_id: userId,
@@ -718,11 +663,11 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
         <div className="panel-heading"><div><h2>Simulador de investimento</h2><p>Os campos são guardados automaticamente neste navegador. Escolha como o investimento rende para calcular uma estimativa bruta.</p></div><Icon name="trend"/></div>
         <div className="investment-form">
           <label>Nome do investimento
-            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ex.: LCI Banco X, CDB, Tesouro..." maxLength={80}/>
+            <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Nome do investimento" maxLength={80}/>
           </label>
           <div className="form-grid">
             <label>Capital aplicado (R$)
-              <input inputMode="decimal" value={capital} onChange={(event) => setCapital(event.target.value)} placeholder="Ex.: 1.500,00"/>
+              <input inputMode="decimal" value={capital} onChange={(event) => setCapital(event.target.value)} placeholder="Capital aplicado"/>
             </label>
             <label>Forma de rendimento
               <select value={yieldMethod} onChange={(event) => setYieldMethod(event.target.value as YieldMethod)}>
@@ -736,13 +681,13 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
             </label>
           </div>
           {yieldMethod === "valorFinal" ? <label>Montante final estimado (R$)
-            <input inputMode="decimal" value={fixedFinalValue} onChange={(event) => setFixedFinalValue(event.target.value)} placeholder="Ex.: 1.650,00"/>
+            <input inputMode="decimal" value={fixedFinalValue} onChange={(event) => setFixedFinalValue(event.target.value)} placeholder="Montante final"/>
           </label> : <div className="form-grid">
             <label>{yieldMethod === "cdi" ? "Percentual do CDI (%)" : yieldMethod === "periodo" ? "Rendimento total no período (%)" : "Taxa " + rateDescription}
-              <input inputMode="decimal" value={rate} onChange={(event) => setRate(event.target.value)} placeholder={yieldMethod === "cdi" ? "Ex.: 100" : "Ex.: 1,2"}/>
+              <input inputMode="decimal" value={rate} onChange={(event) => setRate(event.target.value)} placeholder={yieldMethod === "cdi" ? "Percentual do CDI" : "Taxa de rendimento"}/>
             </label>
             {yieldMethod === "cdi" && <label>CDI anual de referência (% a.a.)
-              <input inputMode="decimal" value={cdiRate} onChange={(event) => setCdiRate(event.target.value)} placeholder="Ex.: 14,90"/>
+              <input inputMode="decimal" value={cdiRate} onChange={(event) => setCdiRate(event.target.value)} placeholder="Taxa CDI anual atual"/>
             </label>}
           </div>}
           <label>Tipo de resgate
@@ -799,20 +744,26 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
   </section>;
 }
 
-function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Income[] }) {
+function AnalysisView({ expenses, income, userId }: { expenses: Expense[]; income: Income[]; userId: string }) {
+  const supabase = createClient();
   const [period, setPeriod] = useState<"mensal" | "semanal">("mensal");
   const [savedInvestments, setSavedInvestments] = useState<InvestmentSimulation[]>([]);
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("fluxo-investment-simulations");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setSavedInvestments(parsed);
+    let cancelled = false;
+    async function loadInvestments() {
+      try {
+        const { data, error } = await supabase.from("user_financial_data").select("data").eq("user_id", userId).eq("section", "investments").maybeSingle();
+        if (error) throw error;
+        const saved = data?.data as { savedSimulations?: InvestmentSimulation[] } | null;
+        if (!cancelled) setSavedInvestments(Array.isArray(saved?.savedSimulations) ? saved.savedSimulations : []);
+      } catch (error) {
+        console.error("Não foi possível carregar os investimentos da análise:", error);
+        if (!cancelled) setSavedInvestments([]);
       }
-    } catch {
-      setSavedInvestments([]);
     }
-  }, []);
+    loadInvestments();
+    return () => { cancelled = true; };
+  }, [userId]);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -962,7 +913,7 @@ function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Incom
         <div className="panel analysis-detail">
           <div className="panel-heading"><div><h2>Recebimentos</h2><p>{period === "semanal" ? "Somente as entradas previstas para a semana selecionada." : "Leitura das entradas previstas e da capacidade de cobertura."}</p></div><Icon name="arrow"/></div>
           <div className="analysis-detail-grid">
-            <div><span>Total previsto</span><strong>{money(periodIncomeTotal)}</strong><small>{period === "semanal" ? (incomeInWeek.length ? periodLabel : "Nenhuma entrada prevista na semana") : "3 entradas registradas"}</small></div>
+            <div><span>Total previsto</span><strong>{money(periodIncomeTotal)}</strong><small>{period === "semanal" ? (incomeInWeek.length ? periodLabel : "Nenhuma entrada prevista na semana") : `${income.length} entradas registradas`}</small></div>
             <div><span>Cobertura das despesas</span><strong>{periodIncomeCoverage}%</strong><small>recebimentos ÷ despesas do período</small></div>
           </div>
           <div className="analysis-bars">
@@ -975,7 +926,7 @@ function AnalysisView({ expenses, income }: { expenses: Expense[]; income: Incom
         <div className="panel analysis-detail">
           <div className="panel-heading"><div><h2>Despesas</h2><p>{period === "semanal" ? "Somente despesas com vencimento dentro da semana em análise." : "Composição, urgência e impacto sobre o dinheiro disponível."}</p></div><Icon name="wallet"/></div>
           <div className="analysis-detail-grid">
-            <div><span>Total planejado</span><strong>{money(periodExpenseTotal)}</strong><small>{period === "semanal" ? `${expensesInWeek.length} compromisso(s) na semana` : "5 compromissos"}</small></div>
+            <div><span>Total planejado</span><strong>{money(periodExpenseTotal)}</strong><small>{period === "semanal" ? `${expensesInWeek.length} compromisso(s) na semana` : `${expenses.length} compromissos`}</small></div>
             <div><span>Alta urgência</span><strong>{money(periodHighUrgency)}</strong><small>valor que deve ser protegido primeiro</small></div>
           </div>
           {period === "semanal" ? (
