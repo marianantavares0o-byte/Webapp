@@ -5,10 +5,13 @@ import { createClient } from "@/lib/supabase/client";
 
 type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
 
+type ExpenseKind = "Fixa" | "Variável";
+
 type Expense = {
   id: number;
   name: string;
   category: string;
+  kind?: ExpenseKind;
   amount: number;
   due: string;
   urgency: "Alta" | "Média" | "Baixa";
@@ -102,6 +105,55 @@ function Icon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24" className="icon" aria-hidden="true"><path d={paths[name] || paths.grid} /></svg>;
 }
 
+type DonutSlice = { key: string; label: string; value: number; color: string };
+
+function SpendingDonut({ slices }: { slices: DonutSlice[] }) {
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  const positive = slices.filter((slice) => slice.value > 0);
+  const total = positive.reduce((sum, slice) => sum + slice.value, 0);
+  let offset = 0;
+  return (
+    <div className="allocation-layout">
+      <div className="spending-donut" role="img" aria-label="Gráfico em círculo com a distribuição do seu dinheiro">
+        <svg viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r={radius} fill="none" stroke="rgba(255,255,255,.07)" strokeWidth="26" />
+          {total > 0 && positive.map((slice) => {
+            const length = (slice.value / total) * circumference;
+            const circle = (
+              <circle
+                key={slice.key}
+                cx="90" cy="90" r={radius} fill="none"
+                stroke={slice.color} strokeWidth="26"
+                strokeDasharray={length + " " + (circumference - length)}
+                strokeDashoffset={-offset}
+                transform="rotate(-90 90 90)"
+              />
+            );
+            offset += length;
+            return circle;
+          })}
+        </svg>
+        <div className="spending-donut-center">
+          <span>Total</span>
+          <strong>{money(total)}</strong>
+        </div>
+      </div>
+      <div className="spending-legend">
+        {slices.map((slice) => (
+          <div key={slice.key}>
+            <i style={{ background: slice.color }} />
+            <span>{slice.label}</span>
+            <strong>{money(slice.value)}</strong>
+            <small>{total > 0 && slice.value > 0 ? Math.round((slice.value / total) * 100) + "%" : "0%"}</small>
+          </div>
+        ))}
+        {total === 0 && <p className="spending-empty">Cadastre despesas, saldo ou investimentos para ver a distribuição do seu dinheiro.</p>}
+      </div>
+    </div>
+  );
+}
+
 function FinanceApp({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("visao");
   const [showNotifications, setShowNotifications] = useState(false);
@@ -165,9 +217,45 @@ function FinanceApp({ userId }: { userId: string }) {
     return () => clearTimeout(timer);
   }, [expenses, income, balance, storageLoaded, userId]);
 
-  const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
+  const [investedTotal, setInvestedTotal] = useState(0);
+
+  useEffect(() => {
+    if (tab !== "visao") return;
+    let cancelled = false;
+    async function loadInvestedTotal() {
+      try {
+        const { data, error } = await supabase
+          .from("user_financial_data")
+          .select("data")
+          .eq("user_id", userId)
+          .eq("section", "investments")
+          .maybeSingle();
+        if (error) throw error;
+        const saved = data?.data as { savedSimulations?: InvestmentSimulation[] } | null;
+        const total = Array.isArray(saved?.savedSimulations)
+          ? saved.savedSimulations.reduce((sum, item) => sum + (Number(item.capital) || 0), 0)
+          : 0;
+        if (!cancelled) setInvestedTotal(total);
+      } catch (error) {
+        console.error("Não foi possível carregar o total investido:", error);
+      }
+    }
+    loadInvestedTotal();
+    return () => { cancelled = true; };
+  }, [tab, userId]);
+
+  const [newExpense, setNewExpense] = useState({ name: "", category: "", kind: "Variável" as ExpenseKind, amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
   const [newIncome, setNewIncome] = useState({ name: "", source: "", amount: "", day: "", confidence: "Média" as Income["confidence"] });
 
+
+  const fixedExpensesTotal = expenses.filter((e) => e.kind === "Fixa").reduce((sum, e) => sum + e.amount, 0);
+  const variableExpensesTotal = expenses.filter((e) => e.kind !== "Fixa").reduce((sum, e) => sum + e.amount, 0);
+  const moneySlices: DonutSlice[] = [
+    { key: "fixas", label: "Despesas fixas", value: fixedExpensesTotal, color: "#6171e8" },
+    { key: "variaveis", label: "Despesas variáveis", value: variableExpensesTotal, color: "#ff9b8f" },
+    { key: "investido", label: "Investido", value: investedTotal, color: "#67c7ff" },
+    { key: "disponivel", label: "Saldo disponível", value: Math.max(0, balance), color: "#4fd1b5" }
+  ];
 
   const pending = expenses.filter((e) => e.status === "Pendente");
   const totalPending = pending.reduce((sum, e) => sum + e.amount, 0);
@@ -239,9 +327,9 @@ function FinanceApp({ userId }: { userId: string }) {
     if (!newExpense.name || !amount) return;
     setExpenses((current) => [
       ...current,
-      { id: Date.now(), name: newExpense.name, category: newExpense.category.trim(), amount, due: newExpense.due.trim(), urgency: newExpense.urgency, status: "Pendente" }
+      { id: Date.now(), name: newExpense.name, category: newExpense.category.trim(), kind: newExpense.kind, amount, due: newExpense.due.trim(), urgency: newExpense.urgency, status: "Pendente" }
     ]);
-    setNewExpense({ name: "", category: "Outros", amount: "", due: "", urgency: "Média", status: "Pendente" });
+    setNewExpense({ name: "", category: "Outros", kind: "Variável", amount: "", due: "", urgency: "Média", status: "Pendente" });
     setShowAdd(false);
     setTab("gastos");
   }
@@ -251,6 +339,7 @@ function FinanceApp({ userId }: { userId: string }) {
     setNewExpense({
       name: expense.name,
       category: expense.category,
+      kind: expense.kind ?? "Variável",
       amount: String(expense.amount).replace(".", ","),
       due: expense.due,
       urgency: expense.urgency,
@@ -264,11 +353,11 @@ function FinanceApp({ userId }: { userId: string }) {
     if (!newExpense.name.trim() || !amount) return;
     setExpenses((current) => current.map((expense) =>
       expense.id === editingExpense.id
-        ? { ...expense, name: newExpense.name.trim(), category: newExpense.category.trim(), amount, due: newExpense.due.trim(), urgency: newExpense.urgency, status: newExpense.status }
+        ? { ...expense, name: newExpense.name.trim(), category: newExpense.category.trim(), kind: newExpense.kind, amount, due: newExpense.due.trim(), urgency: newExpense.urgency, status: newExpense.status }
         : expense
     ));
     setEditingExpense(null);
-    setNewExpense({ name: "", category: "Outros", amount: "", due: "", urgency: "Média", status: "Pendente" });
+    setNewExpense({ name: "", category: "Outros", kind: "Variável", amount: "", due: "", urgency: "Média", status: "Pendente" });
   }
 
   function deleteExpense(id: number) {
@@ -302,7 +391,6 @@ function FinanceApp({ userId }: { userId: string }) {
         ))}</nav>
         <div className="sidebar-bottom">
           <div className="mini-card"><Icon name="shield"/><div><strong>Controle ativo</strong><span>Dados organizados</span></div></div>
-          <button className="auth-signout" type="button" onClick={() => { void supabase.auth.signOut(); }}>Sair da conta</button>
         </div>
       </aside>
 
@@ -373,8 +461,9 @@ function FinanceApp({ userId }: { userId: string }) {
               </div>
 
               <div className="panel allocation-panel">
-                <div className="panel-heading"><div><h2>Resumo financeiro</h2><p>Valores calculados com base nas informações que você cadastrar.</p></div><Icon name="target"/></div>
-                <div className="allocation-legend">
+                <div className="panel-heading"><div><h2>Resumo financeiro</h2><p>Para onde seu dinheiro está indo: despesas fixas, variáveis, investimentos e saldo livre.</p></div><Icon name="target"/></div>
+                <SpendingDonut slices={moneySlices} />
+                <div className="allocation-legend allocation-summary">
                   <div><span>Saldo disponível</span><strong>{money(balance)}</strong></div>
                   <div><span>Despesas pendentes</span><strong>{money(totalPending)}</strong></div>
                   <div><span>Receitas previstas</span><strong>{money(expectedIncome)}</strong></div>
@@ -453,7 +542,7 @@ function FinanceApp({ userId }: { userId: string }) {
             </>
           ) : (
             <>
-              <div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Descrição da despesa"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Opcional"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="DD/MM (opcional)"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button>
+              <div className="modal-head"><div><p className="eyebrow">{editingExpense ? "EDITAR DESPESA" : "NOVA DESPESA"}</p><h2>{editingExpense ? "Alterar gasto" : "Adicionar gasto"}</h2></div><button className="close" onClick={() => { setShowAdd(false); setEditingExpense(null); }}>×</button></div><label>Descrição<input value={newExpense.name} onChange={(e) => setNewExpense({...newExpense, name:e.target.value})} placeholder="Descrição da despesa"/></label><div className="form-grid"><label>Categoria<input value={newExpense.category} onChange={(e) => setNewExpense({...newExpense, category:e.target.value})} placeholder="Opcional"/></label><label>Valor<input inputMode="decimal" value={newExpense.amount} onChange={(e) => setNewExpense({...newExpense, amount:e.target.value})} placeholder="0,00"/></label></div><label>Tipo de despesa<select value={newExpense.kind} onChange={(e) => setNewExpense({...newExpense, kind:e.target.value as ExpenseKind})}><option value="Fixa">Fixa (valor que se repete todo mês)</option><option value="Variável">Variável (muda de mês para mês)</option></select></label><div className="form-grid"><label>Vencimento<input value={newExpense.due} onChange={(e) => setNewExpense({...newExpense, due:e.target.value})} placeholder="DD/MM (opcional)"/></label><label>Urgência<select value={newExpense.urgency} onChange={(e) => setNewExpense({...newExpense, urgency:e.target.value as Expense["urgency"]})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label></div>{editingExpense && <label>Status<select value={newExpense.status} onChange={(e) => setNewExpense({...newExpense, status:e.target.value as Expense["status"]})}><option>Pendente</option><option>Pago</option></select></label>}<button className="primary full" onClick={editingExpense ? saveEditedExpense : addExpense}>{editingExpense ? "Salvar alterações" : "Adicionar ao planejamento"}</button>
             </>
           )}
         </div></div>}
@@ -1103,92 +1192,45 @@ function FinancialCalendar({ expenses, income }: { expenses: Expense[]; income: 
   );
 }
 
-type AuthMode = "login" | "signup" | "forgot";
+const DEVICE_ID_KEY = "nexo-device-id";
 
-function AuthScreen() {
-  const supabase = createClient();
-  const [mode, setMode] = useState<AuthMode>("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    setErrorMessage("");
-    try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
-        if (error) throw error;
-        setMessage(data.session
-          ? "Conta criada. Você já pode usar o Nexo."
-          : "Conta criada. Verifique seu e-mail para confirmar o cadastro antes de entrar.");
-        if (!data.session) setMode("login");
-      } else if (mode === "forgot") {
-        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: window.location.origin
-        });
-        if (error) throw error;
-        setMessage("Se houver uma conta para esse e-mail, enviaremos as instruções de recuperação.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (error) throw error;
-      }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Não foi possível concluir a operação.");
-    } finally {
-      setBusy(false);
-    }
+// Plano B caso o Supabase não permita entrada anônima: identifica este navegador localmente.
+function getDeviceId() {
+  try {
+    const saved = window.localStorage.getItem(DEVICE_ID_KEY);
+    if (saved) return saved;
+    const created = window.crypto.randomUUID();
+    window.localStorage.setItem(DEVICE_ID_KEY, created);
+    return created;
+  } catch {
+    return "dispositivo-local";
   }
-
-  return <main className="auth-shell">
-    <section className="auth-card">
-      <NexoLogo />
-      <p className="eyebrow">GESTÃO FINANCEIRA PESSOAL</p>
-      <h1>{mode === "signup" ? "Crie sua conta" : mode === "forgot" ? "Recuperar acesso" : "Entre no Nexo"}</h1>
-      <p className="auth-description">{mode === "signup" ? "Seus dados financeiros ficam vinculados à sua conta." : mode === "forgot" ? "Informe seu e-mail para receber as instruções de recuperação." : "Acesse suas despesas, receitas e simulações salvas na nuvem."}</p>
-      <form onSubmit={submit} className="auth-form">
-        <label htmlFor="nexo-email">E-mail</label>
-        <input id="nexo-email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="voce@exemplo.com" />
-        {mode !== "forgot" && <>
-          <label htmlFor="nexo-password">Senha</label>
-          <input id="nexo-password" type="password" autoComplete={mode === "signup" ? "new-password" : "current-password"} required minLength={6} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo de 6 caracteres" />
-        </>}
-        {message && <p className="auth-success" role="status">{message}</p>}
-        {errorMessage && <p className="auth-error" role="alert">{errorMessage}</p>}
-        <button className="primary auth-submit" type="submit" disabled={busy}>{busy ? "Aguarde..." : mode === "signup" ? "Criar conta" : mode === "forgot" ? "Enviar instruções" : "Entrar"}</button>
-      </form>
-      <div className="auth-links">
-        {mode === "login" && <><button type="button" onClick={() => { setMode("signup"); setMessage(""); setErrorMessage(""); }}>Criar uma conta</button><button type="button" onClick={() => { window.location.href = "/esqueci-senha"; }}>Esqueci minha senha</button></>}
-        {mode !== "login" && <button type="button" onClick={() => { setMode("login"); setMessage(""); setErrorMessage(""); }}>Voltar para entrar</button>}
-      </div>
-    </section>
-  </main>;
 }
 
 export default function Home() {
   const supabase = createClient();
-  const [sessionChecked, setSessionChecked] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (mounted) {
-        setUserId(data.session?.user.id ?? null);
-        setSessionChecked(true);
+    async function openApp() {
+      let id: string | null = null;
+      try {
+        const { data } = await supabase.auth.getSession();
+        id = data.session?.user.id ?? null;
+        if (!id) {
+          // Entra automaticamente, sem tela de login: os dados ficam ligados a este navegador.
+          const { data: anonymous, error } = await supabase.auth.signInAnonymously();
+          if (error) throw error;
+          id = anonymous.user?.id ?? null;
+        }
+      } catch (error) {
+        console.error("Não foi possível iniciar a sessão automática:", error);
       }
-    });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setUserId(session?.user.id ?? null);
-        setSessionChecked(true);
-      }
-    });
-    return () => { mounted = false; listener.subscription.unsubscribe(); };
+      if (mounted) setUserId(id ?? getDeviceId());
+    }
+    openApp();
+    return () => { mounted = false; };
   }, []);
-  if (!sessionChecked) return <main className="auth-shell"><section className="auth-card"><NexoLogo /><p>Carregando sua conta...</p></section></main>;
-  return userId ? <FinanceApp userId={userId} /> : <AuthScreen />;
+  if (!userId) return <main className="auth-shell"><section className="auth-card"><NexoLogo /><p>Abrindo o Nexo...</p></section></main>;
+  return <FinanceApp userId={userId} />;
 }

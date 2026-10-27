@@ -599,3 +599,18 @@ footer{color:#5f737e}
 .notification-empty p{font-size:11px;line-height:1.6;color:#9bb0b9}
 .notification-empty button{margin-top:10px}
 @media(max-width:520px){.notification-popover{right:-45px;padding:14px}.notification-income{grid-template-columns:68px minmax(0,1fr)}.notification-countdown{min-height:74px}}
+
+/* Resumo financeiro: gráfico em círculo da distribuição do dinheiro */
+.spending-donut{position:relative;width:178px;height:178px;flex:none}
+.spending-donut svg{width:100%;height:100%;display:block}
+.spending-donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:2px;pointer-events:none}
+.spending-donut-center span{font-size:9px;color:#8498a4;text-transform:uppercase;letter-spacing:.08em}
+.spending-donut-center strong{font-size:14px;color:#dcebe9;max-width:96px;overflow-wrap:anywhere}
+.spending-legend{display:grid;gap:10px;min-width:0}
+.spending-legend>div{display:grid;grid-template-columns:10px 1fr auto 34px;gap:8px;align-items:center;font-size:11px;color:#8498a4}
+.spending-legend i{width:9px;height:9px;border-radius:50%;display:block}
+.spending-legend strong{font-size:12px;color:#dcebe9}
+.spending-legend small{font-size:10px;color:#8498a4;text-align:right}
+.spending-empty{margin:4px 0 0;font-size:11px;color:#8498a4}
+.allocation-summary{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+@media(max-width:700px){.spending-donut{margin:0 auto}}
