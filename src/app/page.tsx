@@ -991,8 +991,6 @@ function FuturePlansView({ userId }: { userId: string }) {
       if (error) {
         console.error("Não foi possível salvar os planos futuros:", error);
         setMessage("Não foi possível salvar agora. Suas alterações podem não ter sido sincronizadas.");
-      } else {
-        setMessage("");
       }
       setSaving(false);
     }, 450);
@@ -1001,6 +999,7 @@ function FuturePlansView({ userId }: { userId: string }) {
 
   function addPlan(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!loaded || loadFailed) return;
     const normalized = draft.totalAmount.trim().replace(/\s/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".");
     const totalAmount = Number(normalized);
     const installments = Number(draft.installments);
