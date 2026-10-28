@@ -62,3 +62,7 @@
 @media(max-width:1250px){.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(100px,.7fr) minmax(0,1.3fr)}.lower>.surface:not(.calendar-panel) .donut{max-width:175px}}
 @media(max-width:900px){.lower{grid-template-columns:1fr}.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(140px,.8fr) minmax(0,1.2fr)}}
 @media(max-width:620px){.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(105px,.8fr) minmax(0,1.2fr);gap:5px}.lower>.surface:not(.calendar-panel) .legend{gap:8px;max-height:260px}}
+
+/* Nexo brand mark: preserve the former 32px icon footprint across the app. */
+.brand-mark{display:block;width:32px;height:32px;flex:0 0 32px;overflow:visible}
+.auth-brand .brand-mark{width:32px;height:32px;flex:0 0 32px}
