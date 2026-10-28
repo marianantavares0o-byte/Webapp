@@ -102,12 +102,52 @@ function Icon({ name }: { name: string }) {
   return <svg viewBox="0 0 24 24" className="icon" aria-hidden="true"><path d={paths[name] || paths.grid} /></svg>;
 }
 
+type AllocationSlice = { label: string; value: number; color: string; detail?: string };
+
+function MoneyAllocationChart({ slices, total }: { slices: AllocationSlice[]; total: number }) {
+  const radius = 62;
+  const circumference = 2 * Math.PI * radius;
+  const visibleSlices = slices.filter((slice) => Number.isFinite(slice.value) && slice.value > 0);
+  let offset = 0;
+  return (
+    <div className="money-allocation-layout">
+      <div className="money-donut-wrap">
+        <svg className="money-donut" viewBox="0 0 180 180" role="img" aria-label={`Gráfico de distribuição dos valores cadastrados, total ${money(total)}`}>
+          <circle cx="90" cy="90" r={radius} fill="none" stroke="var(--nexo-line)" strokeWidth="19" />
+          {total > 0 && visibleSlices.map((slice) => {
+            const length = (slice.value / total) * circumference;
+            const currentOffset = offset;
+            offset += length;
+            return <circle key={slice.label} cx="90" cy="90" r={radius} fill="none" stroke={slice.color} strokeWidth="19" strokeDasharray={`${Math.max(0, length - 1)} ${circumference}`} strokeDashoffset={-currentOffset} transform="rotate(-90 90 90)" strokeLinecap="butt" />;
+          })}
+          <text x="90" y="83" textAnchor="middle" className="money-donut-caption">VALORES</text>
+          <text x="90" y="103" textAnchor="middle" className="money-donut-total">{total > 0 ? money(total).replace(",00", "") : "R$ 0"}</text>
+        </svg>
+      </div>
+      <div className="money-allocation-legend">
+        {slices.map((slice) => (
+          <div className="money-allocation-item" key={slice.label}>
+            <span className="money-allocation-dot" style={{ background: slice.color }} />
+            <div className="money-allocation-copy"><span>{slice.label}</span>{slice.detail && <small>{slice.detail}</small>}</div>
+            <div className="money-allocation-amount"><strong>{money(slice.value)}</strong><small>{total > 0 ? `${((slice.value / total) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "0%"}</small></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function isFixedExpense(expense: Expense) {
+  const text = `${expense.category} ${expense.name}`.toLocaleLowerCase("pt-BR");
+  return /aluguel|condom[ií]nio|moradia|internet|telefone|celular|mensalidade|assinatura|streaming|escola|faculdade|plano|seguro|financiamento|prestação|prestacao|energia|água|agua|g[aá]s|academia|conta fixa/.test(text);
+}
+
 function FinanceApp({ userId }: { userId: string }) {
   const [tab, setTab] = useState<Tab>("visao");
   const [showNotifications, setShowNotifications] = useState(false);
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income, setIncome] = useState(initialIncome);
-  const [balance, setBalance] = useState(0);
+  const [balance, setBalance] = useState(0);\n  const [overviewInvestments, setOverviewInvestments] = useState<InvestmentSimulation[]>([]);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
@@ -164,6 +204,23 @@ function FinanceApp({ userId }: { userId: string }) {
     }, 350);
     return () => clearTimeout(timer);
   }, [expenses, income, balance, storageLoaded, userId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadOverviewInvestments() {
+      try {
+        const { data, error } = await supabase.from("user_financial_data").select("data").eq("user_id", userId).eq("section", "investments").maybeSingle();
+        if (error) throw error;
+        const saved = data?.data as { savedSimulations?: InvestmentSimulation[] } | null;
+        if (!cancelled) setOverviewInvestments(Array.isArray(saved?.savedSimulations) ? saved.savedSimulations : []);
+      } catch (error) {
+        console.error("Não foi possível carregar os investimentos para o resumo:", error);
+        if (!cancelled) setOverviewInvestments([]);
+      }
+    }
+    loadOverviewInvestments();
+    return () => { cancelled = true; };
+  }, [userId]);
 
   const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
   const [newIncome, setNewIncome] = useState({ name: "", source: "", amount: "", day: "", confidence: "Média" as Income["confidence"] });
@@ -373,12 +430,23 @@ function FinanceApp({ userId }: { userId: string }) {
               </div>
 
               <div className="panel allocation-panel">
-                <div className="panel-heading"><div><h2>Resumo financeiro</h2><p>Valores calculados com base nas informações que você cadastrar.</p></div><Icon name="target"/></div>
-                <div className="allocation-legend">
-                  <div><span>Saldo disponível</span><strong>{money(balance)}</strong></div>
-                  <div><span>Despesas pendentes</span><strong>{money(totalPending)}</strong></div>
-                  <div><span>Receitas previstas</span><strong>{money(expectedIncome)}</strong></div>
-                </div>
+                <div className="panel-heading"><div><h2>Resumo financeiro</h2><p>Veja como os valores cadastrados se distribuem entre despesas, investimentos simulados e saldo disponível.</p></div><Icon name="target"/></div>
+                {(() => {
+                  const fixedExpenses = expenses.filter(isFixedExpense).reduce((sum, expense) => sum + expense.amount, 0);
+                  const variableExpenses = expenses.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + expense.amount, 0);
+                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
+                  const allocation: AllocationSlice[] = [
+                    { label: "Despesas fixas", value: fixedExpenses, color: "#55d6bb", detail: "Pagas e pendentes" },
+                    { label: "Despesas variáveis e outras", value: variableExpenses, color: "#76c9f5", detail: "Pagas e pendentes" },
+                    { label: "Capital em investimentos", value: investedCapital, color: "#b7a0ff", detail: "Simulações salvas" },
+                    { label: "Saldo disponível", value: Math.max(0, balance), color: "#efbd6d", detail: "Saldo informado" }
+                  ];
+                  const allocationTotal = allocation.reduce((sum, item) => sum + item.value, 0);
+                  return <>
+                    <MoneyAllocationChart slices={allocation} total={allocationTotal} />
+                    <p className="money-allocation-note">A classificação das despesas usa palavras da descrição e da categoria. Confira as categorias cadastradas. O capital investido considera simulações salvas e não confirma saldo real aplicado; receitas previstas não entram no total até serem recebidas.</p>
+                  </>;
+                })()}
               </div>
             </section>
 
