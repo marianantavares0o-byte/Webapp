@@ -97,7 +97,9 @@ function Icon({ name }: { name: string }) {
     target: "M12 21a9 9 0 100-18 9 9 0 000 18zM12 17a5 5 0 100-10 5 5 0 000 10zM12 13a1 1 0 100-2 1 1 0 000 2z",
     chart: "M5 19V9M12 19V5M19 19v-7",
     shield: "M12 3l7 3v5c0 4.5-2.8 8.2-7 10-4.2-1.8-7-5.5-7-10V6z",
-    x: "M6 6l12 12M18 6L6 18"
+    x: "M6 6l12 12M18 6L6 18",
+    sun: "M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.42 1.42M16.94 16.94l1.42 1.42M18.36 5.64l-1.42 1.42M7.06 16.94l-1.42 1.42M16 12a4 4 0 11-8 0 4 4 0 018 0z",
+    moon: "M20.5 14.2A8.5 8.5 0 019.8 3.5 8.5 8.5 0 1020.5 14.2z"
   };
   return <svg viewBox="0 0 24 24" className="icon" aria-hidden="true"><path d={paths[name] || paths.grid} /></svg>;
 }
@@ -105,38 +107,43 @@ function Icon({ name }: { name: string }) {
 type AllocationSlice = { label: string; value: number; color: string; detail?: string };
 
 function MoneyAllocationChart({ slices, total }: { slices: AllocationSlice[]; total: number }) {
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const radius = 62;
   const circumference = 2 * Math.PI * radius;
   const visibleSlices = slices.filter((slice) => Number.isFinite(slice.value) && slice.value > 0);
+  const selectedSlice = visibleSlices.find((slice) => slice.label === selectedLabel) ?? null;
   let offset = 0;
+
   return (
     <div className="money-allocation-layout">
       <div className="money-donut-wrap">
-        <svg className="money-donut" viewBox="0 0 180 180" role="img" aria-label={`Gráfico de distribuição dos valores cadastrados, total ${money(total)}`}>
+        <svg className="money-donut" viewBox="0 0 180 180" role="img" aria-label={`Distribuição das despesas cadastradas, total ${money(total)}`}>
           <circle cx="90" cy="90" r={radius} fill="none" stroke="var(--nexo-line)" strokeWidth="19" />
           {total > 0 && visibleSlices.map((slice) => {
             const length = (slice.value / total) * circumference;
             const currentOffset = offset;
             offset += length;
-            return <circle key={slice.label} cx="90" cy="90" r={radius} fill="none" stroke={slice.color} strokeWidth="19" strokeDasharray={`${Math.max(0, length - 1)} ${circumference}`} strokeDashoffset={-currentOffset} transform="rotate(-90 90 90)" strokeLinecap="butt" />;
+            const selected = selectedLabel === slice.label;
+            return <circle key={slice.label} cx="90" cy="90" r={radius} fill="none" stroke={slice.color} strokeWidth={selected ? 24 : 19} strokeDasharray={`${Math.max(0, length - 1)} ${circumference}`} strokeDashoffset={-currentOffset} transform="rotate(-90 90 90)" strokeLinecap="butt" opacity={selectedLabel && !selected ? 0.42 : 1} />;
           })}
-          <text x="90" y="83" textAnchor="middle" className="money-donut-caption">VALORES</text>
-          <text x="90" y="103" textAnchor="middle" className="money-donut-total">{total > 0 ? money(total).replace(",00", "") : "R$ 0"}</text>
+          <text x="90" y="83" textAnchor="middle" className="money-donut-caption">{selectedSlice ? "CATEGORIA" : "TOTAL DE GASTOS"}</text>
+          <text x="90" y="103" textAnchor="middle" className="money-donut-total">{money(selectedSlice ? selectedSlice.value : total).replace(",00", "")}</text>
         </svg>
       </div>
-      <div className="money-allocation-legend">
+      <div className="money-allocation-legend" aria-label="Categorias de despesas; selecione para destacar no gráfico">
         {slices.map((slice) => (
-          <div className="money-allocation-item" key={slice.label}>
+          <button type="button" className={`money-allocation-item ${selectedLabel === slice.label ? "selected" : ""}`} key={slice.label}
+            onClick={() => setSelectedLabel((current) => current === slice.label ? null : slice.label)}
+            aria-pressed={selectedLabel === slice.label} aria-label={`Destacar ${slice.label}: ${money(slice.value)}`}>
             <span className="money-allocation-dot" style={{ background: slice.color }} />
-            <div className="money-allocation-copy"><span>{slice.label}</span>{slice.detail && <small>{slice.detail}</small>}</div>
-            <div className="money-allocation-amount"><strong>{money(slice.value)}</strong><small>{total > 0 ? `${((slice.value / total) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "0%"}</small></div>
-          </div>
+            <span className="money-allocation-copy"><span>{slice.label}</span>{slice.detail && <small>{slice.detail}</small>}</span>
+            <span className="money-allocation-amount"><strong>{money(slice.value)}</strong><small>{total > 0 ? `${((slice.value / total) * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%` : "0%"}</small></span>
+          </button>
         ))}
       </div>
     </div>
   );
 }
-
 function isFixedExpense(expense: Expense) {
   const text = `${expense.category} ${expense.name}`.toLocaleLowerCase("pt-BR");
   return /aluguel|condom[ií]nio|moradia|internet|telefone|celular|mensalidade|assinatura|streaming|escola|faculdade|plano|seguro|financiamento|prestação|prestacao|energia|água|agua|g[aá]s|academia|conta fixa/.test(text);
@@ -154,7 +161,19 @@ function FinanceApp({ userId }: { userId: string }) {
   const [showAddIncome, setShowAddIncome] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [themeReady, setThemeReady] = useState(false);
   const supabase = createClient();
+
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem("nexo-theme");
+    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
+    setThemeReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (themeReady) window.localStorage.setItem("nexo-theme", theme);
+  }, [theme, themeReady]);
 
   useEffect(() => {
     let cancelled = false;
@@ -351,7 +370,7 @@ function FinanceApp({ userId }: { userId: string }) {
   ] as const;
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell theme-${theme}`} data-theme={theme}>
       <aside className="sidebar">
         <NexoLogo />
         <div className="profile"><div className="avatar">NX</div><div><strong>Nexo</strong><span>Gestão financeira</span></div></div>
@@ -368,6 +387,9 @@ function FinanceApp({ userId }: { userId: string }) {
         <header className="topbar">
           <div><p className="eyebrow">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p><h1>{tab === "visao" ? "Seu dinheiro, em perspectiva." : nav.find((n) => n[0] === tab)?.[1]}</h1></div>
           <div className="top-actions">
+            <button type="button" className="icon-button theme-toggle" aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
+              <Icon name={theme === "dark" ? "sun" : "moon"}/>
+            </button>
             <div className="notification-wrap">
               <button
                 type="button"
@@ -431,21 +453,25 @@ function FinanceApp({ userId }: { userId: string }) {
               </div>
 
               <div className="panel allocation-panel">
-                <div className="panel-heading"><div><h2>Resumo financeiro</h2><p>Veja como os valores cadastrados se distribuem entre despesas, investimentos simulados e saldo disponível.</p></div><Icon name="target"/></div>
+                <div className="panel-heading"><div><h2>Distribuição das despesas</h2><p>Veja como o total de despesas cadastradas se divide entre custos fixos e variáveis.</p></div><Icon name="target"/></div>
                 {(() => {
-                  const fixedExpenses = expenses.filter(isFixedExpense).reduce((sum, expense) => sum + expense.amount, 0);
-                  const variableExpenses = expenses.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + expense.amount, 0);
-                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
+                  const fixedExpenses = expenses.filter(isFixedExpense).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
+                  const variableExpenses = expenses.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
                   const allocation: AllocationSlice[] = [
-                    { label: "Despesas fixas", value: fixedExpenses, color: "#55d6bb", detail: "Pagas e pendentes" },
-                    { label: "Despesas variáveis e outras", value: variableExpenses, color: "#76c9f5", detail: "Pagas e pendentes" },
-                    { label: "Capital em investimentos", value: investedCapital, color: "#b7a0ff", detail: "Simulações salvas" },
-                    { label: "Saldo disponível", value: Math.max(0, balance), color: "#efbd6d", detail: "Saldo informado" }
+                    { label: "Despesas fixas", value: fixedExpenses, color: "#00E59B", detail: "Pagas e pendentes" },
+                    { label: "Despesas variáveis e outras", value: variableExpenses, color: "#536DFF", detail: "Pagas e pendentes" }
                   ];
                   const allocationTotal = allocation.reduce((sum, item) => sum + item.value, 0);
+                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
                   return <>
-                    <MoneyAllocationChart slices={allocation} total={allocationTotal} />
-                    <p className="money-allocation-note">A classificação das despesas usa palavras da descrição e da categoria. Confira as categorias cadastradas. O capital investido considera simulações salvas e não confirma saldo real aplicado; receitas previstas não entram no total até serem recebidas.</p>
+                    {allocationTotal > 0
+                      ? <MoneyAllocationChart slices={allocation} total={allocationTotal} />
+                      : <div className="allocation-empty"><strong>Seu gráfico aparecerá aqui</strong><span>Cadastre despesas para visualizar a distribuição entre custos fixos e variáveis.</span></div>}
+                    <div className="allocation-context-metrics">
+                      <div><span>Saldo disponível</span><strong>{money(Math.max(0, balance))}</strong><small>Valor informado no planejamento</small></div>
+                      <div><span>Capital em simulações</span><strong>{money(investedCapital)}</strong><small>Não representa uma carteira de investimentos confirmada</small></div>
+                    </div>
+                    <p className="money-allocation-note">O gráfico representa despesas cadastradas, pagas e pendentes, e não patrimônio. A classificação entre fixas e variáveis usa palavras na descrição e na categoria; revise-a quando necessário. Saldo e capital de simulações são exibidos separadamente para evitar somar valores de naturezas diferentes.</p>
                   </>;
                 })()}
               </div>
