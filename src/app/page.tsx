@@ -598,31 +598,72 @@ function FinanceApp({ userId }: { userId: string }) {
 
 function ExpenseView({ expenses, onToggle, onAdd, onEdit, onDelete }: { expenses: Expense[]; onToggle: (id:number)=>void; onAdd:()=>void; onEdit:(expense: Expense)=>void; onDelete:(id:number)=>void }) {
   const [openMenu, setOpenMenu] = useState<number | null>(null);
-  const total = expenses.reduce((s,e)=>s+e.amount,0);
-  return <section className="page-section"><div className="summary-strip"><div><span>Total planejado</span><strong>{money(total)}</strong></div><div><span>Pagos</span><strong>{expenses.filter(e=>e.status==="Pago").length}</strong></div></div><div className="panel"><div className="panel-heading"><div><h2>Todos os gastos <span className="expense-count">{expenses.length}</span></h2><p>Ordene suas decisões pela urgência e pelo impacto no saldo.</p></div><button className="primary small" onClick={onAdd}><Icon name="plus"/> Novo gasto</button></div><div className="table"><div className="table-head"><span>Despesa</span><span>Prazo</span><span>Urgência</span><span>Valor</span><span>Status</span><span>Ações</span></div>{[...expenses].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).map(e=><div className="table-row expense-table-row" key={e.id}><div><strong>{e.name}</strong><span>{e.category || "Sem categoria"}</span></div><span>{e.due || "Sem data"}</span><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span><strong>{money(e.amount)}</strong><button className={e.status==="Pago"?"status paid":"status"} onClick={()=>onToggle(e.id)}>{e.status}</button><div className="expense-actions"><button type="button" className="action-menu-button" aria-label={"Ações para " + e.name} onClick={()=>setOpenMenu(openMenu === e.id ? null : e.id)}>⋮</button>{openMenu === e.id && <div className="action-menu"><button type="button" onClick={()=>{setOpenMenu(null);onEdit(e)}}>Alterar</button><button type="button" className="delete-action" onClick={()=>{setOpenMenu(null);onDelete(e.id)}}>Excluir</button></div>}</div></div>)}</div></div></section>
+  const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const pendingTotal = expenses.filter((expense) => expense.status === "Pendente").reduce((sum, expense) => sum + expense.amount, 0);
+  const sortedExpenses = [...expenses].sort((a,b) => {
+    const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2;
+    const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2;
+    const ad = a.due.trim() ? 0 : 1;
+    const bd = b.due.trim() ? 0 : 1;
+    const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER;
+    const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER;
+    return au - bu || ad - bd || aday - bday;
+  });
+  return <section className="page-section records-page">
+    <div className="records-overview">
+      <div><span>Valor total cadastrado</span><strong>{money(total)}</strong><small>Despesas pagas e pendentes</small></div>
+      <div><span>Valores pendentes</span><strong>{money(pendingTotal)}</strong><small>{expenses.filter((expense) => expense.status === "Pendente").length} compromissos em aberto</small></div>
+      <button type="button" className="control-action-primary" onClick={onAdd}><Icon name="plus"/> Nova despesa</button>
+    </div>
+    <div className="panel records-panel">
+      <div className="panel-heading"><div><p className="eyebrow">CONTROLE DE SAÍDAS</p><h2>Despesas cadastradas <span className="expense-count">{expenses.length}</span></h2><p>Priorize pelo vencimento, urgência e impacto no saldo.</p></div></div>
+      {sortedExpenses.length === 0 ? <div className="control-empty-state"><span className="control-empty-icon"><Icon name="wallet"/></span><strong>Você ainda não cadastrou despesas</strong><p>Adicione seus compromissos para acompanhar vencimentos e valores pendentes.</p><button type="button" className="control-action-primary" onClick={onAdd}><Icon name="plus"/> Cadastrar primeira despesa</button></div> :
+        <div className="record-list">
+          {sortedExpenses.map((expense) => <article className="record-card expense-record" key={expense.id}>
+            <div className="record-main"><span className="record-kind">DESPESA</span><strong>{expense.name}</strong><small>{expense.category || "Sem categoria"}</small></div>
+            <div className="record-amount"><span>Valor</span><strong>{money(expense.amount)}</strong></div>
+            <div className="record-details">
+              <span className="record-detail"><Icon name="calendar"/>{expense.due || "Sem vencimento"}</span>
+              <span className={"urgency " + expense.urgency.toLowerCase()}>{expense.urgency} urgência</span>
+              <button type="button" className={expense.status === "Pago" ? "status paid" : "status"} onClick={() => onToggle(expense.id)} aria-label={"Alterar status de " + expense.name}>{expense.status}</button>
+            </div>
+            <div className="expense-actions record-actions">
+              <button type="button" className="action-menu-button" aria-label={"Ações para " + expense.name} onClick={() => setOpenMenu(openMenu === expense.id ? null : expense.id)}>⋮</button>
+              {openMenu === expense.id && <div className="action-menu"><button type="button" onClick={() => { setOpenMenu(null); onEdit(expense); }}>Alterar</button><button type="button" className="delete-action" onClick={() => { setOpenMenu(null); onDelete(expense.id); }}>Excluir</button></div>}
+            </div>
+          </article>)}
+        </div>}
+    </div>
+  </section>;
 }
 
 function IncomeView({ income, onAdd, onEdit, onDelete }: { income: Income[]; onAdd: () => void; onEdit: (item: Income) => void; onDelete: (id: number) => void }) {
   const [openMenu, setOpenMenu] = useState<number | null>(null);
   const total = income.reduce((sum, item) => sum + item.amount, 0);
   const largest = income.length ? Math.max(...income.map((item) => item.amount)) : 0;
-  return <section className="page-section">
-    <div className="summary-strip"><div><span>Entradas estimadas</span><strong>{money(total)}</strong></div><div><span>Maior entrada</span><strong>{money(largest)}</strong></div></div>
-    <div className="panel">
-      <div className="panel-heading"><div><h2>Todas as receitas <span className="expense-count">{income.length}</span></h2><p>Gerencie a descrição, origem, período, valor e confiabilidade de cada entrada.</p></div><button type="button" className="primary small" onClick={onAdd}><Icon name="plus"/> Nova receita</button></div>
-      <div className="table income-table">
-        <div className="table-head"><span>Receita</span><span>Origem</span><span>Recebimento</span><span>Confiabilidade</span><span>Valor</span><span>Ações</span></div>
-        {income.length === 0 ? <div className="income-empty">Nenhuma receita cadastrada. Selecione “Nova receita” para adicionar uma entrada prevista.</div> : [...income].map((item) => (
-          <div className="table-row income-table-row" key={item.id}>
-            <div><strong>{item.name}</strong><span>Entrada prevista</span></div>
-            <span>{item.source || "Não informada"}</span>
-            <span>{item.range || "Sem data"}</span>
-            <span className={"confidence " + item.confidence.toLowerCase()}>{item.confidence}</span>
-            <strong>{money(item.amount)}</strong>
-            <div className="expense-actions"><button type="button" className="action-menu-button" aria-label={"Ações para " + item.name} onClick={() => setOpenMenu(openMenu === item.id ? null : item.id)}>⋮</button>{openMenu === item.id && <div className="action-menu"><button type="button" onClick={() => { setOpenMenu(null); onEdit(item); }}>Alterar</button><button type="button" className="delete-action" onClick={() => { setOpenMenu(null); onDelete(item.id); }}>Excluir</button></div>}</div>
-          </div>
-        ))}
-      </div>
+  return <section className="page-section records-page">
+    <div className="records-overview">
+      <div><span>Total previsto</span><strong>{money(total)}</strong><small>Entradas ainda não recebidas</small></div>
+      <div><span>Maior entrada</span><strong>{money(largest)}</strong><small>{income.length} {income.length === 1 ? "receita cadastrada" : "receitas cadastradas"}</small></div>
+      <button type="button" className="control-action-primary" onClick={onAdd}><Icon name="plus"/> Nova receita</button>
+    </div>
+    <div className="panel records-panel">
+      <div className="panel-heading"><div><p className="eyebrow">CONTROLE DE ENTRADAS</p><h2>Receitas cadastradas <span className="expense-count">{income.length}</span></h2><p>Acompanhe origem, data prevista, valor e confiabilidade de cada entrada.</p></div></div>
+      {income.length === 0 ? <div className="control-empty-state"><span className="control-empty-icon"><Icon name="arrow"/></span><strong>Nenhuma receita prevista</strong><p>Registre entradas esperadas para melhorar a projeção do seu saldo.</p><button type="button" className="control-action-primary" onClick={onAdd}><Icon name="plus"/> Cadastrar primeira receita</button></div> :
+        <div className="record-list">
+          {income.map((item) => <article className="record-card income-record" key={item.id}>
+            <div className="record-main"><span className="record-kind">RECEITA PREVISTA</span><strong>{item.name}</strong><small>{item.source || "Origem não informada"}</small></div>
+            <div className="record-amount"><span>Valor previsto</span><strong>{money(item.amount)}</strong></div>
+            <div className="record-details">
+              <span className="record-detail"><Icon name="calendar"/>{item.range || "Sem data prevista"}</span>
+              <span className={"confidence " + item.confidence.toLowerCase()}>Confiabilidade {item.confidence.toLowerCase()}</span>
+            </div>
+            <div className="expense-actions record-actions">
+              <button type="button" className="action-menu-button" aria-label={"Ações para " + item.name} onClick={() => setOpenMenu(openMenu === item.id ? null : item.id)}>⋮</button>
+              {openMenu === item.id && <div className="action-menu"><button type="button" onClick={() => { setOpenMenu(null); onEdit(item); }}>Alterar</button><button type="button" className="delete-action" onClick={() => { setOpenMenu(null); onDelete(item.id); }}>Excluir</button></div>}
+            </div>
+          </article>)}
+        </div>}
     </div>
   </section>;
 }
