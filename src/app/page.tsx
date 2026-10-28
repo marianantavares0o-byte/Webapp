@@ -385,7 +385,7 @@ function FinanceApp({ userId }: { userId: string }) {
 
       <section className="content">
         <header className="topbar">
-          <div><p className="eyebrow">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p><h1>{tab === "visao" ? "Seu dinheiro, em perspectiva." : nav.find((n) => n[0] === tab)?.[1]}</h1></div>
+          <div className="topbar-copy"><p className="eyebrow">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p><h1>{tab === "visao" ? "Seu dinheiro, em perspectiva." : nav.find((n) => n[0] === tab)?.[1]}</h1><p className="topbar-description">{tab === "visao" ? "Uma leitura clara do seu saldo, dos compromissos e das próximas decisões." : tab === "gastos" ? "Organize vencimentos, prioridades e pagamentos em um só lugar." : tab === "receitas" ? "Acompanhe entradas previstas e planeje com base no que ainda vai receber." : tab === "investimentos" ? "Compare cenários, prazos e retornos estimados antes de decidir." : "Entenda os movimentos do seu dinheiro e identifique oportunidades de ajuste."}</p></div>
           <div className="top-actions">
             <button type="button" className="icon-button theme-toggle" aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sun" : "moon"}/>
@@ -437,7 +437,21 @@ function FinanceApp({ userId }: { userId: string }) {
                 </section>
               )}
             </div>
-            <button className="primary" onClick={() => setShowAdd(true)}><Icon name="plus"/> Novo gasto</button>
+            <button className="primary header-primary-action" onClick={() => {
+              if (tab === "receitas") {
+                setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" });
+                setEditingIncome(null);
+                setShowAddIncome(true);
+              } else if (tab === "investimentos") {
+                setTab("investimentos");
+                window.setTimeout(() => document.querySelector(".investment-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+              } else if (tab === "analise") {
+                setTab("gastos");
+                setShowAdd(true);
+              } else {
+                setShowAdd(true);
+              }
+            }}><Icon name="plus"/>{tab === "receitas" ? "Nova receita" : tab === "investimentos" ? "Nova simulação" : tab === "analise" ? "Novo gasto" : "Nova despesa"}</button>
           </div>
         </header>
 
@@ -475,6 +489,21 @@ function FinanceApp({ userId }: { userId: string }) {
                   </>;
                 })()}
               </div>
+            </section>
+
+            <section className="overview-kpis" aria-label="Indicadores do planejamento">
+              <article className="overview-kpi">
+                <span className="overview-kpi-icon pending"><Icon name="calendar"/></span>
+                <div className="overview-kpi-copy"><span>Compromissos pendentes</span><strong>{money(totalPending)}</strong><small>{pending.length} {pending.length === 1 ? "despesa pendente" : "despesas pendentes"}</small></div>
+              </article>
+              <article className="overview-kpi">
+                <span className="overview-kpi-icon incoming"><Icon name="arrow"/></span>
+                <div className="overview-kpi-copy"><span>Entradas previstas</span><strong>{money(expectedIncome)}</strong><small>{income.length} {income.length === 1 ? "receita cadastrada" : "receitas cadastradas"} · ainda não recebidas</small></div>
+              </article>
+              <article className="overview-kpi">
+                <span className="overview-kpi-icon neutral"><Icon name="wallet"/></span>
+                <div className="overview-kpi-copy"><span>Despesas cadastradas</span><strong>{money(expenses.reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0))}</strong><small>{expenses.filter((expense) => expense.status === "Pago").length} pagas · {pending.length} pendentes</small></div>
+              </article>
             </section>
 
             <section className="overview-main-grid">
