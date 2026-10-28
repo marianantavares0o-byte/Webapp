@@ -581,3 +581,9 @@ body:has(.theme-light) {
 .theme-light .money-donut-caption { fill: #718197; }
 .theme-light .money-donut-total { fill: #203249; }
 .theme-light .money-allocation-note { color: #75869A; }
+
+/* Preserve the intended dashboard reading order */
+.control-hero { order: 0; }
+.control-metrics { order: 1; }
+.control-secondary-grid { order: 2; }
+.control-workspace { order: 3; }
