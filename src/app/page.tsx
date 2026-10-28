@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "analise";
+type Tab = "visao" | "gastos" | "receitas" | "investimentos" | "planos" | "analise";
 
 type Expense = {
   id: number;
@@ -366,6 +366,7 @@ function FinanceApp({ userId }: { userId: string }) {
     ["gastos", "Despesas", "wallet"],
     ["receitas", "Receitas", "arrow"],
     ["investimentos", "Investimentos", "trend"],
+    ["planos", "Planos futuros", "calendar"],
     ["analise", "Análise geral", "chart"]
   ] as const;
 
@@ -385,7 +386,7 @@ function FinanceApp({ userId }: { userId: string }) {
 
       <section className="content">
         <header className="topbar">
-          <div className="topbar-copy"><p className="eyebrow">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p><h1>{tab === "visao" ? "Seu dinheiro, em perspectiva." : nav.find((n) => n[0] === tab)?.[1]}</h1><p className="topbar-description">{tab === "visao" ? "Uma leitura clara do seu saldo, dos compromissos e das próximas decisões." : tab === "gastos" ? "Organize vencimentos, prioridades e pagamentos em um só lugar." : tab === "receitas" ? "Acompanhe entradas previstas e planeje com base no que ainda vai receber." : tab === "investimentos" ? "Compare cenários, prazos e retornos estimados antes de decidir." : "Entenda os movimentos do seu dinheiro e identifique oportunidades de ajuste."}</p></div>
+          <div className="topbar-copy"><p className="eyebrow">{new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}</p><h1>{tab === "visao" ? "Seu dinheiro, em perspectiva." : nav.find((n) => n[0] === tab)?.[1]}</h1><p className="topbar-description">{tab === "visao" ? "Uma leitura clara do seu saldo, dos compromissos e das próximas decisões." : tab === "gastos" ? "Organize vencimentos, prioridades e pagamentos em um só lugar." : tab === "receitas" ? "Acompanhe entradas previstas e planeje com base no que ainda vai receber." : tab === "investimentos" ? "Compare cenários, prazos e retornos estimados antes de decidir." : tab === "planos" ? "Antecipe compras e visualize o impacto das parcelas nos próximos meses." : "Entenda os movimentos do seu dinheiro e identifique oportunidades de ajuste."}</p></div>
           <div className="top-actions">
             <button type="button" className="icon-button theme-toggle" aria-label={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} title={theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro"} onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
               <Icon name={theme === "dark" ? "sun" : "moon"}/>
@@ -445,13 +446,15 @@ function FinanceApp({ userId }: { userId: string }) {
               } else if (tab === "investimentos") {
                 setTab("investimentos");
                 window.setTimeout(() => document.querySelector(".investment-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+              } else if (tab === "planos") {
+                window.setTimeout(() => document.querySelector(".planned-expense-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
               } else if (tab === "analise") {
                 setTab("gastos");
                 setShowAdd(true);
               } else {
                 setShowAdd(true);
               }
-            }}><Icon name="plus"/>{tab === "receitas" ? "Nova receita" : tab === "investimentos" ? "Nova simulação" : tab === "analise" ? "Novo gasto" : "Nova despesa"}</button>
+            }}><Icon name="plus"/>{tab === "receitas" ? "Nova receita" : tab === "investimentos" ? "Nova simulação" : tab === "planos" ? "Novo plano" : tab === "analise" ? "Novo gasto" : "Nova despesa"}</button>
           </div>
         </header>
 
@@ -571,6 +574,7 @@ function FinanceApp({ userId }: { userId: string }) {
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
         {tab === "receitas" && <IncomeView income={income} onAdd={() => { setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); setEditingIncome(null); setShowAddIncome(true); }} onEdit={startEditIncome} onDelete={deleteIncome} />}
         {tab === "investimentos" && <InvestmentView balance={balance} userId={userId} />}
+        {tab === "planos" && <FuturePlansView userId={userId} />}
         {tab === "analise" && <AnalysisView expenses={expenses} income={income} userId={userId} />}
 
         <footer>Nexo organiza estimativas e decisões. Não substitui aconselhamento financeiro profissional.</footer>
@@ -916,6 +920,193 @@ function InvestmentView({ balance, userId }: { balance: number; userId: string }
           <div><span>Montante projetado</span><strong>{money(item.projectedValue)}</strong></div>
           <button type="button" className="icon-button danger" onClick={() => removeSimulation(item.id)} aria-label={"Excluir simulação " + item.name}><Icon name="x"/></button>
         </div>)}</div>}
+    </div>
+  </section>;
+}
+
+
+type PlannedPurchase = {
+  id: number;
+  title: string;
+  totalAmount: number;
+  plannedFor: string;
+  installments: number;
+  category: string;
+  priority: "Alta" | "Média" | "Baixa";
+};
+
+function FuturePlansView({ userId }: { userId: string }) {
+  const supabase = createClient();
+  const [plans, setPlans] = useState<PlannedPurchase[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+  const [draft, setDraft] = useState({
+    title: "", totalAmount: "", plannedFor: "", installments: "1",
+    category: "Compras", priority: "Média" as PlannedPurchase["priority"]
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadPlans() {
+      try {
+        const { data, error } = await supabase.from("user_financial_data")
+          .select("data").eq("user_id", userId).eq("section", "plans").maybeSingle();
+        if (error) throw error;
+        if (cancelled) return;
+        const saved = data?.data as { plans?: PlannedPurchase[] } | null;
+        setPlans(Array.isArray(saved?.plans) ? saved.plans : []);
+        if (!data) {
+          const { error: saveError } = await supabase.from("user_financial_data").upsert({
+            user_id: userId, section: "plans", data: { plans: [] }, updated_at: new Date().toISOString()
+          }, { onConflict: "user_id,section" });
+          if (saveError) throw saveError;
+        }
+      } catch (error) {
+        console.error("Não foi possível carregar os planos futuros:", error);
+        if (!cancelled) setMessage("Não foi possível carregar os planos. Verifique sua conexão e tente novamente.");
+      } finally {
+        if (!cancelled) setLoaded(true);
+      }
+    }
+    void loadPlans();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  useEffect(() => {
+    if (!loaded) return;
+    const timer = window.setTimeout(async () => {
+      setSaving(true);
+      const { error } = await supabase.from("user_financial_data").upsert({
+        user_id: userId, section: "plans", data: { plans }, updated_at: new Date().toISOString()
+      }, { onConflict: "user_id,section" });
+      if (error) {
+        console.error("Não foi possível salvar os planos futuros:", error);
+        setMessage("Não foi possível salvar agora. Suas alterações podem não ter sido sincronizadas.");
+      } else {
+        setMessage("");
+      }
+      setSaving(false);
+    }, 450);
+    return () => window.clearTimeout(timer);
+  }, [plans, loaded, userId]);
+
+  function addPlan(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalized = draft.totalAmount.trim().replace(/\s/g, "").replace(/\.(?=\d{3}(?:\D|$))/g, "").replace(",", ".");
+    const totalAmount = Number(normalized);
+    const installments = Number(draft.installments);
+    if (!draft.title.trim() || !Number.isFinite(totalAmount) || totalAmount <= 0 || !draft.plannedFor ||
+        !Number.isInteger(installments) || installments < 1 || installments > 60) {
+      setMessage("Informe uma descrição, um valor válido, uma data e entre 1 e 60 parcelas.");
+      return;
+    }
+    setPlans((current) => [{
+      id: Date.now(), title: draft.title.trim(), totalAmount: Math.round(totalAmount * 100) / 100,
+      plannedFor: draft.plannedFor, installments, category: draft.category.trim() || "Outros",
+      priority: draft.priority
+    }, ...current]);
+    setDraft({ title: "", totalAmount: "", plannedFor: "", installments: "1", category: "Compras", priority: "Média" });
+    setMessage("Plano adicionado à projeção. Ele ainda não é uma despesa realizada.");
+  }
+
+  const now = new Date();
+  const monthStarts = Array.from({ length: 6 }, (_, index) => new Date(now.getFullYear(), now.getMonth() + index, 1));
+  const projection = monthStarts.map((month) => {
+    const cents = plans.reduce((sum, plan) => {
+      const start = new Date(plan.plannedFor + "T12:00:00");
+      if (Number.isNaN(start.getTime())) return sum;
+      const offset = (month.getFullYear() - start.getFullYear()) * 12 + month.getMonth() - start.getMonth();
+      if (offset < 0 || offset >= plan.installments) return sum;
+      const totalCents = Math.round(plan.totalAmount * 100);
+      const baseCents = Math.floor(totalCents / plan.installments);
+      const installmentCents = offset === plan.installments - 1 ? totalCents - baseCents * (plan.installments - 1) : baseCents;
+      return sum + installmentCents;
+    }, 0);
+    return { month, amount: cents / 100 };
+  });
+  const totalPlanned = plans.reduce((sum, plan) => sum + plan.totalAmount, 0);
+  const monthlyPeak = Math.max(0, ...projection.map((item) => item.amount));
+
+  return <section className="page-section plans-page">
+    <div className="plans-intro">
+      <div>
+        <p className="eyebrow">DECISÕES FUTURAS</p>
+        <h2>Planeje antes de comprar.</h2>
+        <p>Simule compras, viagens e parcelas antes de assumir um compromisso. Os planos não são lançados como despesas efetivas.</p>
+      </div>
+      <div className="plans-total">
+        <span>Valor total planejado</span>
+        <strong>{money(totalPlanned)}</strong>
+        <small>{plans.length} {plans.length === 1 ? "plano ativo" : "planos ativos"}</small>
+      </div>
+    </div>
+
+    <div className="plans-workspace">
+      <section className="planned-expense-form">
+        <div className="panel-heading">
+          <div><p className="eyebrow">NOVO PLANEJAMENTO</p><h2>Adicionar uma compra futura</h2><p>Informe o valor total, quando pretende comprar e como será parcelado.</p></div>
+        </div>
+        <form onSubmit={addPlan} className="future-plan-form">
+          <label>O que você pretende comprar?
+            <input value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder="Ex.: notebook, viagem, celular" maxLength={100} required />
+          </label>
+          <div className="form-grid">
+            <label>Valor total (R$)
+              <input inputMode="decimal" value={draft.totalAmount} onChange={(event) => setDraft({ ...draft, totalAmount: event.target.value })} placeholder="0,00" required />
+            </label>
+            <label>Data planejada
+              <input type="date" value={draft.plannedFor} min={localDateString(new Date())} onChange={(event) => setDraft({ ...draft, plannedFor: event.target.value })} required />
+            </label>
+          </div>
+          <div className="form-grid">
+            <label>Número de parcelas
+              <select value={draft.installments} onChange={(event) => setDraft({ ...draft, installments: event.target.value })}>
+                {Array.from({ length: 60 }, (_, index) => <option key={index + 1} value={String(index + 1)}>{index + 1} {index === 0 ? "parcela" : "parcelas"}</option>)}
+              </select>
+            </label>
+            <label>Categoria
+              <select value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}>
+                <option>Compras</option><option>Viagem</option><option>Casa</option><option>Transporte</option><option>Educação</option><option>Saúde</option><option>Outros</option>
+              </select>
+            </label>
+          </div>
+          <label>Prioridade pessoal
+            <select value={draft.priority} onChange={(event) => setDraft({ ...draft, priority: event.target.value as PlannedPurchase["priority"] })}>
+              <option>Alta</option><option>Média</option><option>Baixa</option>
+            </select>
+          </label>
+          <div className="plan-form-summary">
+            <span>Parcela estimada</span>
+            <strong>{money((Number(draft.totalAmount.replace(/\./g, "").replace(",", ".")) || 0) / Math.max(1, Number(draft.installments) || 1))}</strong>
+            <small>Estimativa simples, sem juros ou taxas adicionais.</small>
+          </div>
+          <button className="primary" type="submit"><Icon name="plus"/> Adicionar à projeção</button>
+          {message && <p className={message.startsWith("Não foi possível") ? "plan-message error" : "plan-message"} role="status">{message}</p>}
+          <p className="plan-save-state">{!loaded ? "Carregando planos salvos…" : saving ? "Sincronizando com sua conta…" : "Seus planos são salvos na sua conta."}</p>
+        </form>
+      </section>
+
+      <section className="plans-projection">
+        <div className="panel-heading"><div><p className="eyebrow">IMPACTO NO ORÇAMENTO</p><h2>Próximos seis meses</h2><p>Parcelas previstas para cada mês, considerando os planos cadastrados.</p></div></div>
+        <div className="projection-chart" aria-label="Projeção mensal das parcelas planejadas">
+          {projection.map((item) => <div className="projection-month" key={item.month.toISOString()}>
+            <div className="projection-bar-track"><div className="projection-bar" style={{ height: monthlyPeak > 0 ? Math.max(3, item.amount / monthlyPeak * 100) + "%" : "3px" }} /></div>
+            <strong>{money(item.amount).replace(",00", "")}</strong>
+            <span>{item.month.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span>
+          </div>)}
+        </div>
+        <div className="projection-note"><Icon name="shield"/><span>Esta projeção considera apenas os planos futuros cadastrados nesta tela. Ela não inclui juros, taxas nem garante disponibilidade de saldo.</span></div>
+        <div className="plans-list-heading"><h2>Planos cadastrados</h2><span>{plans.length}</span></div>
+        {plans.length ? <div className="future-plan-list">
+          {plans.map((plan) => <article className="future-plan-row" key={plan.id}>
+            <div className="future-plan-icon"><Icon name={plan.category === "Viagem" ? "calendar" : plan.category === "Transporte" ? "arrow" : "target"}/></div>
+            <div className="future-plan-main"><strong>{plan.title}</strong><span>{plan.category} · {new Date(plan.plannedFor + "T12:00:00").toLocaleDateString("pt-BR")} · {plan.installments} {plan.installments === 1 ? "parcela" : "parcelas"}</span></div>
+            <div className="future-plan-value"><strong>{money(plan.totalAmount)}</strong><span>{money(plan.totalAmount / plan.installments)} / mês</span></div>
+            <button type="button" className="action-menu-button" aria-label={"Excluir plano " + plan.title} onClick={() => setPlans((current) => current.filter((item) => item.id !== plan.id))}><Icon name="x"/></button>
+          </article>)}
+        </div> : <div className="plans-empty"><strong>Nenhum plano cadastrado.</strong><span>Adicione uma compra ou compromisso para visualizar seu impacto nos próximos meses.</span></div>}
+      </section>
     </div>
   </section>;
 }
