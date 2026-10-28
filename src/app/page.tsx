@@ -52,4 +52,35 @@ return <main className="app"><aside className="sidebar"><Logo/><small className=
 {modal==="asset"&&<div className="form"><p className="form-note">Registre um investimento que você já possui. Não há simulação de retorno futuro nem conexão automática com corretoras.</p><label>Nome do ativo<input autoFocus value={asset.name} onChange={e=>setAsset({...asset,name:e.target.value})} placeholder="Ex.: Tesouro Selic"/></label><div className="form-two"><label>Instituição<input value={asset.institution} onChange={e=>setAsset({...asset,institution:e.target.value})} placeholder="Banco ou corretora"/></label><label>Tipo<select value={asset.type} onChange={e=>setAsset({...asset,type:e.target.value})}>{["Renda fixa","Ações","Fundos imobiliários","Fundos","ETF","Criptoativos","Previdência","Outro"].map(x=><option key={x}>{x}</option>)}</select></label></div><div className="form-two"><label>Capital aportado (R$)<input inputMode="decimal" value={asset.invested} onChange={e=>setAsset({...asset,invested:e.target.value})} placeholder="0,00"/></label><label>Valor atual (R$)<input inputMode="decimal" value={asset.current} onChange={e=>setAsset({...asset,current:e.target.value})} placeholder="0,00"/></label></div><label>Data do registro<input type="date" value={asset.date} onChange={e=>setAsset({...asset,date:e.target.value})}/></label><button className="primary submit" onClick={save}>{edit?"Salvar ativo":"Adicionar à carteira"}</button></div>}
 {modal==="plan"&&<div className="form"><label>Nome do objetivo<input autoFocus value={plan.title} onChange={e=>setPlan({...plan,title:e.target.value})} placeholder="Ex.: Viagem de férias"/></label><div className="form-two"><label>Valor total (R$)<input inputMode="decimal" value={plan.amount} onChange={e=>setPlan({...plan,amount:e.target.value})} placeholder="0,00"/></label><label>Data desejada<input type="date" value={plan.date} onChange={e=>setPlan({...plan,date:e.target.value})}/></label></div><div className="form-two"><label>Parcelas<input type="number" min="1" max="60" value={plan.installments} onChange={e=>setPlan({...plan,installments:e.target.value})}/></label><label>Categoria<select value={plan.category} onChange={e=>setPlan({...plan,category:e.target.value})}>{["Objetivos","Viagem","Tecnologia","Casa","Transporte","Educação","Outros"].map(x=><option key={x}>{x}</option>)}</select></label></div><label>Prioridade<select value={plan.priority} onChange={e=>setPlan({...plan,priority:e.target.value})}><option>Alta</option><option>Média</option><option>Baixa</option></select></label><div className="projection"><small>PARCELA ESTIMADA</small><b>{money(parse(plan.amount||"0")/Math.max(1,Number(plan.installments)||1))}</b><span>Estimativa simples, sem juros ou taxas.</span></div><button className="primary submit" onClick={save}>{edit?"Salvar objetivo":"Registrar objetivo"}</button></div>}</section></div>}
 {toast&&<div className="toast" role="status">{toast}</div>}<nav className="mobile-nav">{nav.map(n=><button key={n.id} className={tab===n.id?"active":""} onClick={()=>{setTab(n.id);setQuery("")}}><Icon n={n.icon} size={18}/><span>{n.label==="Visão geral"?"Início":n.label==="Investimentos"?"Carteira":n.label==="Análise geral"?"Análise":n.label==="Planos futuros"?"Planos":n.label}</span></button>)}</nav></section></main>}
-export default function Home(){const sb=createClient();const [checked,setChecked]=useState(false);const [uid,setUid]=useState<string|null>(null);useEffect(()=>{let live=true;sb.auth.getSession().then(({data})=>{if(live){setUid(data.session?.user.id??null);setChecked(true)}});const {data:sub}=sb.auth.onAuthStateChange((_e,s)=>{if(live){setUid(s?.user.id??null);setChecked(true)}});return()=>{live=false;sub.subscription.unsubscribe()}},[]);if(!checked)return <main className="loading"><Logo/><span>Carregando seu espaço financeiro…</span></main>;return uid?<App userId={uid}/>:<Auth/>}
+export default function Home(){
+ const sb=createClient();
+ const [checked,setChecked]=useState(false);
+ const [uid,setUid]=useState<string|null>(null);
+ const [sessionError,setSessionError]=useState<string|null>(null);
+ useEffect(()=>{
+  let live=true;
+  const init=async()=>{
+   const {data,error}=await sb.auth.getSession();
+   if(!live)return;
+   if(error){setSessionError("Não foi possível iniciar sua sessão. Tente novamente.");setChecked(true);return}
+   if(data.session?.user.id){setUid(data.session.user.id);setChecked(true);return}
+   const {data:anonymous,error:anonymousError}=await sb.auth.signInAnonymously();
+   if(!live)return;
+   if(anonymousError||!anonymous.user?.id){
+    setSessionError("Não foi possível abrir uma sessão automática. O administrador precisa habilitar o acesso anônimo no Supabase Authentication.");
+    setChecked(true);
+    return;
+   }
+   setUid(anonymous.user.id);
+   setChecked(true);
+  };
+  void init();
+  const {data:sub}=sb.auth.onAuthStateChange((_event,session)=>{
+   if(live&&session?.user.id)setUid(session.user.id);
+  });
+  return()=>{live=false;sub.subscription.unsubscribe()};
+ },[]);
+ if(!checked)return <main className="loading"><Logo/><span>Preparando seu espaço financeiro…</span></main>;
+ if(sessionError||!uid)return <main className="loading"><Logo/><span>{sessionError??"Não foi possível iniciar uma sessão."}</span><button className="primary" onClick={()=>window.location.reload()}>Tentar novamente</button></main>;
+ return <App userId={uid}/>;
+}
