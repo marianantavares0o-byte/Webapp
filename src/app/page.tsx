@@ -148,7 +148,7 @@ function FinanceApp({ userId }: { userId: string }) {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [income, setIncome] = useState(initialIncome);
   const [balance, setBalance] = useState(0);
-  const [overviewInvestments, setOverviewInvestments = useState<InvestmentSimulation[]>([]);
+  const [overviewInvestments, setOverviewInvestments] = useState<InvestmentSimulation[]>([]);
   const [storageLoaded, setStorageLoaded] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [showAddIncome, setShowAddIncome] = useState(false);
