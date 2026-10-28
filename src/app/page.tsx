@@ -943,6 +943,7 @@ function FuturePlansView({ userId }: { userId: string }) {
   const supabase = createClient();
   const [plans, setPlans] = useState<PlannedPurchase[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [draft, setDraft] = useState({
@@ -968,7 +969,10 @@ function FuturePlansView({ userId }: { userId: string }) {
         }
       } catch (error) {
         console.error("Não foi possível carregar os planos futuros:", error);
-        if (!cancelled) setMessage("Não foi possível carregar os planos. Verifique sua conexão e tente novamente.");
+        if (!cancelled) {
+          setLoadFailed(true);
+          setMessage("Não foi possível carregar os planos. Para evitar sobrescrever dados, a edição fica pausada até a conexão ser recuperada.");
+        }
       } finally {
         if (!cancelled) setLoaded(true);
       }
@@ -978,7 +982,7 @@ function FuturePlansView({ userId }: { userId: string }) {
   }, [userId]);
 
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || loadFailed) return;
     const timer = window.setTimeout(async () => {
       setSaving(true);
       const { error } = await supabase.from("user_financial_data").upsert({
@@ -993,7 +997,7 @@ function FuturePlansView({ userId }: { userId: string }) {
       setSaving(false);
     }, 450);
     return () => window.clearTimeout(timer);
-  }, [plans, loaded, userId]);
+  }, [plans, loaded, loadFailed, userId]);
 
   function addPlan(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1085,9 +1089,9 @@ function FuturePlansView({ userId }: { userId: string }) {
             <strong>{money((Number(draft.totalAmount.replace(/\./g, "").replace(",", ".")) || 0) / Math.max(1, Number(draft.installments) || 1))}</strong>
             <small>Estimativa simples, sem juros ou taxas adicionais.</small>
           </div>
-          <button className="primary" type="submit"><Icon name="plus"/> Adicionar à projeção</button>
+          <button className="primary" type="submit" disabled={!loaded || loadFailed}><Icon name="plus"/> Adicionar à projeção</button>
           {message && <p className={message.startsWith("Não foi possível") ? "plan-message error" : "plan-message"} role="status">{message}</p>}
-          <p className="plan-save-state">{!loaded ? "Carregando planos salvos…" : saving ? "Sincronizando com sua conta…" : "Seus planos são salvos na sua conta."}</p>
+          <p className="plan-save-state">{!loaded ? "Carregando planos salvos…" : loadFailed ? "Sincronização indisponível." : saving ? "Sincronizando com sua conta…" : "Seus planos são salvos na sua conta."}</p>
         </form>
       </section>
 
