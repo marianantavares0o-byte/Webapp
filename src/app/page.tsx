@@ -456,105 +456,116 @@ function FinanceApp({ userId }: { userId: string }) {
         </header>
 
         {tab === "visao" && (
-          <>
-            <section className="overview-top">
-              <div className="balance-card balance-card-modern">
-                <div className="card-top"><span>Saldo total disponível</span><span className="pill positive">Hoje</span></div>
-                <strong className="balance">{money(balance)}</strong>
-                <p className="balance-caption">Valor livre para decisões financeiras antes dos próximos compromissos.</p>
-                <div className="balance-meta"><span>Saldo projetado após entradas e pagamentos</span><strong>{money(projectedBalance)}</strong></div>
-                <div className="progress"><span style={{ width: Math.min(100, Math.max(0, (balance / Math.max(1, balance + totalPending)) * 100)) + "%" }}/></div>
+          <section className="control-overview">
+            <section className="control-hero" aria-label="Posição financeira atual">
+              <div className="control-hero-main">
+                <p className="eyebrow">POSIÇÃO FINANCEIRA</p>
+                <span className="control-balance-label">Saldo disponível</span>
+                <strong className="control-balance-value">{money(balance)}</strong>
+                <p className="control-hero-caption">Valor informado para orientar suas próximas decisões.</p>
               </div>
-
-              <div className="panel allocation-panel">
-                <div className="panel-heading"><div><h2>Distribuição das despesas</h2><p>Veja como o total de despesas cadastradas se divide entre custos fixos e variáveis.</p></div><Icon name="target"/></div>
-                {(() => {
-                  const fixedExpenses = expenses.filter(isFixedExpense).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
-                  const variableExpenses = expenses.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
-                  const allocation: AllocationSlice[] = [
-                    { label: "Despesas fixas", value: fixedExpenses, color: "#00E59B", detail: "Pagas e pendentes" },
-                    { label: "Despesas variáveis e outras", value: variableExpenses, color: "#536DFF", detail: "Pagas e pendentes" }
-                  ];
-                  const allocationTotal = allocation.reduce((sum, item) => sum + item.value, 0);
-                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
-                  return <>
-                    {allocationTotal > 0
-                      ? <MoneyAllocationChart slices={allocation} total={allocationTotal} />
-                      : <div className="allocation-empty"><strong>Seu gráfico aparecerá aqui</strong><span>Cadastre despesas para visualizar a distribuição entre custos fixos e variáveis.</span></div>}
-                    <div className="allocation-context-metrics">
-                      <div><span>Saldo disponível</span><strong>{money(Math.max(0, balance))}</strong><small>Valor informado no planejamento</small></div>
-                      <div><span>Capital em simulações</span><strong>{money(investedCapital)}</strong><small>Não representa uma carteira de investimentos confirmada</small></div>
-                    </div>
-                    <p className="money-allocation-note">O gráfico representa despesas cadastradas, pagas e pendentes, e não patrimônio. A classificação entre fixas e variáveis usa palavras na descrição e na categoria; revise-a quando necessário. Saldo e capital de simulações são exibidos separadamente para evitar somar valores de naturezas diferentes.</p>
-                  </>;
-                })()}
+              <div className="control-projection">
+                <span>Saldo projetado</span>
+                <strong>{money(projectedBalance)}</strong>
+                <small>Saldo atual + entradas previstas − despesas pendentes</small>
+              </div>
+              <div className="control-hero-actions">
+                <button type="button" className="control-action-primary" onClick={() => setShowAdd(true)}><Icon name="plus"/> Registrar despesa</button>
+                <button type="button" className="control-action-secondary" onClick={() => { setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); setEditingIncome(null); setShowAddIncome(true); }}><Icon name="arrow"/> Registrar receita</button>
               </div>
             </section>
 
-            <section className="overview-kpis" aria-label="Indicadores do planejamento">
-              <article className="overview-kpi">
-                <span className="overview-kpi-icon pending"><Icon name="calendar"/></span>
-                <div className="overview-kpi-copy"><span>Compromissos pendentes</span><strong>{money(totalPending)}</strong><small>{pending.length} {pending.length === 1 ? "despesa pendente" : "despesas pendentes"}</small></div>
+            <section className="control-metrics" aria-label="Indicadores financeiros">
+              <article className="control-metric">
+                <span className="control-metric-label"><i className="metric-dot pending-dot"/>Compromissos pendentes</span>
+                <strong>{money(totalPending)}</strong>
+                <small>{pending.length} {pending.length === 1 ? "despesa" : "despesas"} a pagar</small>
               </article>
-              <article className="overview-kpi">
-                <span className="overview-kpi-icon incoming"><Icon name="arrow"/></span>
-                <div className="overview-kpi-copy"><span>Entradas previstas</span><strong>{money(expectedIncome)}</strong><small>{income.length} {income.length === 1 ? "receita cadastrada" : "receitas cadastradas"} · ainda não recebidas</small></div>
+              <article className="control-metric">
+                <span className="control-metric-label"><i className="metric-dot income-dot"/>Entradas previstas</span>
+                <strong>{money(expectedIncome)}</strong>
+                <small>{income.length} {income.length === 1 ? "receita cadastrada" : "receitas cadastradas"} · ainda não recebidas</small>
               </article>
-              <article className="overview-kpi">
-                <span className="overview-kpi-icon neutral"><Icon name="wallet"/></span>
-                <div className="overview-kpi-copy"><span>Despesas cadastradas</span><strong>{money(expenses.reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0))}</strong><small>{expenses.filter((expense) => expense.status === "Pago").length} pagas · {pending.length} pendentes</small></div>
+              <article className="control-metric">
+                <span className="control-metric-label"><i className="metric-dot neutral-dot"/>Despesas cadastradas</span>
+                <strong>{money(expenses.reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0))}</strong>
+                <small>{expenses.filter((expense) => expense.status === "Pago").length} pagas · {pending.length} pendentes</small>
               </article>
             </section>
 
-            <section className="overview-main-grid">
-              <div className="panel commitments-panel">
+            <section className="control-workspace">
+              <div className="panel commitments-panel control-commitments">
                 <div className="panel-heading">
-                  <div><h2>Próximos compromissos</h2><p>Pagamentos organizados do prazo mais próximo ao mais distante.</p></div>
-                  <button className="text-button" onClick={() => setTab("gastos")}>Ver gastos <Icon name="chevron"/></button>
+                  <div><p className="eyebrow">AÇÃO PRIORITÁRIA</p><h2>Próximos compromissos</h2><p>Pagamentos pendentes organizados por urgência e prazo.</p></div>
+                  <button className="text-button" onClick={() => setTab("gastos")}>Ver despesas <Icon name="chevron"/></button>
                 </div>
-                <div className="commitments-list">
-                  {[...pending].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).map((e) => (
-                    <div className="commitment-card" key={e.id}>
-                      <div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}>
-                        <strong>{e.due ? e.due.split("/")[0] : "—"}</strong><span>{e.due ? new Date(2000, Number(e.due.split("/")[1]) - 1, 1).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase() : "SEM DATA"}</span>
+                {pending.length ? (
+                  <div className="commitments-list">
+                    {[...pending].sort((a,b) => { const au = a.urgency === "Alta" ? 0 : a.urgency === "Média" ? 1 : 2; const bu = b.urgency === "Alta" ? 0 : b.urgency === "Média" ? 1 : 2; const ad = a.due.trim() ? 0 : 1; const bd = b.due.trim() ? 0 : 1; const aday = a.due.trim() ? Number(a.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; const bday = b.due.trim() ? Number(b.due.split("/")[0]) : Number.MAX_SAFE_INTEGER; return au - bu || ad - bd || aday - bday; }).slice(0, 4).map((e) => (
+                      <div className="commitment-card" key={e.id}>
+                        <div className={"date-box " + (e.urgency === "Alta" ? "danger" : e.urgency === "Média" ? "medium" : "")}>
+                          <strong>{e.due ? e.due.split("/")[0] : "—"}</strong><span>{e.due ? new Date(2000, Number(e.due.split("/")[1]) - 1, 1).toLocaleDateString("pt-BR", { month: "short" }).replace(".", "").toUpperCase() : "SEM DATA"}</span>
+                        </div>
+                        <div className="commitment-main">
+                          <div className="commitment-title"><strong>{e.name}</strong><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span></div>
+                          <span>{e.category || "Sem categoria"}</span>
+                        </div>
+                        <strong className="commitment-value">{money(e.amount)}</strong>
                       </div>
-                      <div className="commitment-main">
-                        <div className="commitment-title"><strong>{e.name}</strong><span className={"urgency " + e.urgency.toLowerCase()}>{e.urgency}</span></div>
-                        <span>{e.category || "Sem categoria"} · {money(e.amount)}</span>
-                      </div>
-                      <div className="commitment-alert">
-                        <span className={e.urgency === "Alta" ? "alert-mark red" : "alert-mark blue"}>{e.urgency === "Alta" ? "!" : "i"}</span>
-                        <p>{e.urgency === "Alta" ? "Prioridade: separe este valor antes do vencimento." : "Planeje este pagamento para não comprometer o saldo."}</p>
-                      </div>
-                      <strong className="commitment-value">{money(e.amount)}</strong>
-                    </div>
-                  ))}
-                  <div className="commitments-total"><span>Somatório dos valores pendentes</span><strong>{money(totalPending)}</strong></div>                </div>
+                    ))}
+                    <div className="commitments-total"><span>Somatório dos valores pendentes</span><strong>{money(totalPending)}</strong></div>
+                    {pending.length > 4 && <button type="button" className="control-view-all" onClick={() => setTab("gastos")}>Ver mais {pending.length - 4} compromissos</button>}
+                  </div>
+                ) : <div className="control-empty-state"><span className="control-empty-icon"><Icon name="calendar"/></span><strong>Nenhum compromisso pendente</strong><p>Quando cadastrar despesas a pagar, elas aparecerão aqui.</p><button type="button" className="text-button" onClick={() => setShowAdd(true)}>Adicionar despesa <Icon name="chevron"/></button></div>}
               </div>
 
-              <div className="panel calendar-panel">
-                <div className="panel-heading"><div><h2>Calendário financeiro</h2><p>Escolha o mês para visualizar pagamentos e recebimentos previstos.</p></div></div>
+              <div className="panel calendar-panel control-calendar">
+                <div className="panel-heading"><div><p className="eyebrow">AGENDA</p><h2>Calendário financeiro</h2><p>Pagamentos e recebimentos previstos.</p></div></div>
                 <FinancialCalendar expenses={expenses} income={income}/>
               </div>
             </section>
 
-            <section className="panel financial-feedback">
-              <div className="panel-heading">
-                <div><p className="eyebrow">FEEDBACK</p></div>
+            <section className="control-secondary-grid">
+              <div className="panel allocation-panel control-allocation">
+                <div className="panel-heading"><div><p className="eyebrow">COMPOSIÇÃO</p><h2>Distribuição das despesas</h2><p>Custos fixos e variáveis das despesas cadastradas.</p></div><Icon name="target"/></div>
+                {(() => {
+                  const fixedExpenses = expenses.filter(isFixedExpense).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
+                  const variableExpenses = expenses.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
+                  const allocation: AllocationSlice[] = [
+                    { label: "Despesas fixas", value: fixedExpenses, color: "#55D6BB", detail: "Pagas e pendentes" },
+                    { label: "Despesas variáveis e outras", value: variableExpenses, color: "#7D9BAA", detail: "Pagas e pendentes" }
+                  ];
+                  const allocationTotal = allocation.reduce((sum, item) => sum + item.value, 0);
+                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
+                  return (
+                    <>
+                      {allocationTotal > 0 ? <MoneyAllocationChart slices={allocation} total={allocationTotal}/> : <div className="allocation-empty"><strong>Sem despesas para classificar</strong><span>Cadastre despesas para visualizar a composição dos gastos.</span></div>}
+                      <div className="allocation-context-metrics">
+                        <div><span>Saldo disponível</span><strong>{money(Math.max(0, balance))}</strong><small>Valor informado no planejamento</small></div>
+                        <div><span>Capital em simulações</span><strong>{money(investedCapital)}</strong><small>Não representa uma carteira confirmada</small></div>
+                      </div>
+                      <p className="money-allocation-note">O gráfico considera despesas pagas e pendentes. A classificação entre fixas e variáveis é estimada por palavras na descrição e categoria. Saldo e capital de simulações são exibidos separadamente.</p>
+                    </>
+                  );
+                })()}
               </div>
-              <div className="feedback-text">
-                <div className="feedback-section">
-                  <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante e exige prioridade no planejamento." : "Não há pagamentos pendentes registrados no momento."}</strong>
-                  <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Separe esse valor antes de assumir novos gastos, pois preservar a liquidez reduz o risco de comprometer pagamentos essenciais." : "Mantenha os pagamentos previstos dentro do planejamento e evite comprometer o saldo com despesas flexíveis antes de confirmar as entradas estimadas."} {nextIncome ? "A próxima entrada é " + nextIncome.name + ", prevista para " + nextIncome.range + ". Até o recebimento, trate essa receita como expectativa, não como dinheiro disponível." : "Não há novas entradas estimadas registradas."} {savingsRate >= 20 ? " Como a margem projetada permanece positiva, preserve parte desse excedente antes de aumentar o consumo." : " Como a margem projetada é limitada, priorize liquidez e adie gastos discricionários."}</p>
+
+              <section className="panel financial-feedback control-feedback">
+                <div className="panel-heading"><div><p className="eyebrow">LEITURA FINANCEIRA</p><h2>O que merece atenção</h2></div></div>
+                <div className="feedback-text">
+                  <div className="feedback-section">
+                    <strong>{nextPayment ? nextPayment.name + " é o próximo compromisso relevante no planejamento." : "Não há pagamentos pendentes registrados."}</strong>
+                    <p>{highPriorityTotal > 0 ? "As despesas de alta urgência somam " + money(highPriorityTotal) + ". Proteja esse valor antes de assumir novos gastos." : "Mantenha os pagamentos previstos dentro do planejamento e evite comprometer o saldo com despesas flexíveis antes de confirmar as entradas estimadas."} {nextIncome ? "A próxima entrada é " + nextIncome.name + ", prevista para " + nextIncome.range + ". Trate-a como expectativa até o recebimento." : "Não há novas entradas estimadas registradas."} {savingsRate >= 20 ? " A margem projetada é positiva; preserve parte do excedente." : " A margem projetada é limitada; priorize liquidez e adie gastos discricionários."}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="feedback-metrics">
-                <div><span>Margem projetada</span><strong>{savingsRate}%</strong><small>margem projetada sobre as entradas previstas</small></div>
-                <div><span>Cobertura dos compromissos</span><strong>{projectedCoverage}%</strong><small>saldo + entradas ÷ gastos pendentes</small></div>
-                <div><span>Saldo após urgentes</span><strong>{money(balanceAfterHighPriority)}</strong><small>antes das demais despesas</small></div>
-              </div>
+                <div className="feedback-metrics">
+                  <div><span>Margem projetada</span><strong>{savingsRate}%</strong><small>sobre as entradas previstas</small></div>
+                  <div><span>Cobertura dos compromissos</span><strong>{projectedCoverage}%</strong><small>saldo + entradas ÷ pendências</small></div>
+                  <div><span>Saldo após urgentes</span><strong>{money(balanceAfterHighPriority)}</strong><small>antes das demais despesas</small></div>
+                </div>
+              </section>
             </section>
-          </>
+          </section>
         )}
 
         {tab === "gastos" && <ExpenseView expenses={expenses} onToggle={togglePaid} onAdd={() => setShowAdd(true)} onEdit={startEditExpense} onDelete={deleteExpense} />}
