@@ -130,8 +130,22 @@ export function HelpPanel({ onClose, onNewIncome, onNewExpense }: { onClose: () 
         <p className="help-note">Use <code>DD/MM</code> (ex.: 15/11) ou uma faixa como <code>5 a 10</code> para receitas. O calendário e a projeção usam essas datas.</p>
         <h3>Como o saldo projetado é calculado</h3>
         <p className="help-note">Começa no seu saldo informado e aplica, em ordem de data, as receitas (+) e as despesas pendentes (−) do mês. Despesas já pagas não entram de novo. O resultado é a estimativa para o último dia do mês, se tudo for cumprido.</p>
-        <h3>Atalhos úteis</h3>
-        <p className="help-note">O sino mostra vencimentos e recebimentos próximos. O Assistente entende frases como “despesa aluguel 800 dia 5” e sempre pede a sua confirmação antes de registrar.</p>
+        <h3>Como usar o Assistente (ícone ✦ no topo)</h3>
+        <ol className="help-steps">
+          <li>Abra o Assistente e escreva uma frase curta, como <code>despesa aluguel 800 dia 5</code> ou <code>receita salário 3500 dia 5</code>.</li>
+          <li>Ele mostra o que entendeu (tipo, descrição, valor e data). Toque em <b>Confirmar e registrar</b>, ou em <b>Editar antes</b> para ajustar no formulário. Nada é salvo sem a sua confirmação.</li>
+          <li>Para registrar algo já pago, comece com “paguei”: <code>paguei mercado 230,50 hoje</code>. Também entende <code>hoje</code>, <code>amanhã</code>, <code>dia 15</code>, <code>15/11</code> e <code>5 de novembro</code>.</li>
+          <li>Também responde perguntas: <code>quanto vou ter no fim do mês?</code>, <code>o que vence esta semana?</code>, <code>quanto tenho pendente?</code> e <code>qual meu saldo?</code></li>
+        </ol>
+        <p className="help-note">O Assistente entende frases simples com regras do próprio app (não consulta uma IA externa). Se ele não entender, use um dos exemplos que aparecem como botões dentro dele. Informe sempre o tipo (despesa ou receita) e o valor.</p>
+        <h3>Como usar os lembretes (sino no topo)</h3>
+        <ol className="help-steps">
+          <li>O sino mostra quantos vencimentos e recebimentos estão chegando. O mesmo aviso aparece na Visão geral, em destaque amarelo.</li>
+          <li>Abra o sino para ver a lista: despesas atrasadas aparecem em vermelho, e cada item mostra se é “Hoje”, “Amanhã” ou “Em N dias”.</li>
+          <li>Em <b>Avisar com antecedência de</b>, escolha no próprio dia, 1, 3 ou 7 dias.</li>
+          <li>Se quiser, marque <b>Também avisar pelo navegador</b> e permita as notificações. Você recebe um resumo por dia.</li>
+        </ol>
+        <p className="help-note">Os lembretes dependem das datas que você preenche: despesas e receitas sem data não geram aviso. Despesas já pagas não aparecem. As preferências ficam salvas apenas neste navegador.</p>
         <button className="primary" onClick={onClose}>Entendi, vamos começar</button>
       </div>
     </Shell>
