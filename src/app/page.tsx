@@ -10,7 +10,9 @@ type Plan = {id:number;title:string;amount:number;date:string;installments:numbe
 type MainData = {expenses:Expense[];income:Income[];balance:number};
 const blank:MainData={expenses:[],income:[],balance:0};
 const money=(n:number)=>(Number.isFinite(n)?n:0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const parse=(s:string)=>Number(s.trim().replace(/\s/g,"").replace(/\.(?=\d{3}(?:\D|$))/g,"").replace(",","."));
+const parse=(s:string)=>Number(s.trim().replace(/R\$/gi,"").replace(/\s/g,"").replace(/\.(?=\d{3}(?:\D|$))/g,"").replace(",", "."));
+const csvCells=(line:string,delimiter:string)=>{const cells:string[]=[];let value="",quoted=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'){value+='"';i++}else if(c==='"'){quoted=!quoted}else if(c===delimiter&&!quoted){cells.push(value.trim());value=""}else value+=c}cells.push(value.trim());return cells};
+const normalizeHeader=(s:string)=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
 const months=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 function Icon({n,size=18}:{n:string;size?:number}){const p:Record<string,string>={home:"M3 10 12 3l9 7M5 9v11h14V9M9 20v-7h6v7",expense:"M4 5h16M4 10h16M4 15h10M4 20h7",income:"M4 12h15m-6-6 6 6-6 6",invest:"M3 17l6-6 4 3 8-9M15 5h6v6",calendar:"M7 3v3m10-3v3M4 9h16M5 5h14v15H5z",chart:"M4 19V9m8 10V4m8 15v-7",plus:"M12 5v14M5 12h14",search:"M11 19a8 8 0 110-16 8 8 0 010 16zm6-2 4 4",close:"M6 6l12 12M18 6 6 18",shield:"M12 3l7 3v5c0 4.5-2.8 8.2-7 10-4.2-1.8-7-5.5-7-10V6z",arrow:"M5 12h14m-6-6 6 6-6 6"};return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={p[n]||p.home}/></svg>}
 function Logo(){return <div className="brand"><b>N</b><span>Nexo</span><small>FINANCE</small></div>}
