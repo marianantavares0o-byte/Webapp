@@ -1154,3 +1154,17 @@ button,input,select,textarea{transition-duration:.18s}
 @media(max-width:380px){
   .allocation-context-metrics{grid-template-columns:1fr}
 }
+
+
+/* Ajustes finos para a barra superior com alternância de tema em telas estreitas */
+@media(max-width:760px){
+  .topbar{gap:7px}
+  .topbar h1{max-width:43vw}
+  .top-actions{gap:5px}
+  .top-actions .icon-button{width:38px;height:38px;flex:none}
+}
+@media(max-width:380px){
+  .topbar h1{max-width:39vw;font-size:19px}
+  .top-actions .primary,.top-actions .icon-button{width:36px;height:36px;min-height:36px}
+  .top-actions .primary .icon,.top-actions .icon-button .icon{width:16px;height:16px}
+}
