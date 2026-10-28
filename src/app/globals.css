@@ -555,3 +555,29 @@ footer { color: #718398; font-size: 9px; margin: 25px 0 5px; }
   .projection-chart { gap: 5px; height: 130px; }
   .projection-month strong { font-size: 7px; }
 }
+
+
+/* Hierarquia final da visão geral: posição -> composição -> compromissos */
+.control-secondary-grid { order: -1; }
+.control-overview .control-secondary-grid { margin-top: -2px; }
+.control-overview .control-allocation { padding: 0; }
+.control-overview .control-allocation .money-allocation-layout { grid-template-columns: minmax(150px,190px) minmax(0,1fr); }
+.control-overview .control-allocation .money-donut { max-width: 190px; }
+.control-overview .control-allocation .money-donut-total { font-size: 11px; }
+.control-overview .control-allocation .allocation-context-metrics { margin-top: 14px; }
+.control-overview .control-allocation .money-allocation-note { max-width: 560px; }
+.control-hero-actions { align-items: center; }
+@media (max-width: 600px) {
+  .control-overview .control-secondary-grid { margin-top: 0; }
+  .control-overview .control-allocation .money-allocation-layout { grid-template-columns: minmax(100px,130px) minmax(0,1fr); }
+  .control-hero-actions { grid-template-columns: 1fr 1fr; }
+  .control-hero-actions > :last-child { grid-column: 1/-1; }
+}
+body:has(.theme-light) {
+  background: #F3F6FA;
+  color: #152235;
+}
+.theme-light .control-secondary-grid { border-top-color: rgba(43,67,91,.14); }
+.theme-light .money-donut-caption { fill: #718197; }
+.theme-light .money-donut-total { fill: #203249; }
+.theme-light .money-allocation-note { color: #75869A; }
