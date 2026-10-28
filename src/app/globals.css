@@ -870,3 +870,41 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
+
+
+/* Overview: financial allocation donut chart */
+.money-allocation-layout{
+  display:grid;grid-template-columns:minmax(150px,.82fr) minmax(0,1.25fr);
+  align-items:center;gap:18px;min-width:0
+}
+.money-donut-wrap{display:flex;align-items:center;justify-content:center;min-width:0}
+.money-donut{display:block;width:100%;max-width:205px;height:auto;overflow:visible}
+.money-donut-caption{fill:var(--nexo-muted);font-size:8px;font-weight:700;letter-spacing:1.1px}
+.money-donut-total{fill:var(--nexo-text);font-size:11px;font-weight:750;letter-spacing:-.25px}
+.money-allocation-legend{display:grid;gap:0;min-width:0}
+.money-allocation-item{display:grid;grid-template-columns:9px minmax(0,1fr) auto;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid var(--nexo-line);min-width:0}
+.money-allocation-item:last-child{border-bottom:0}
+.money-allocation-dot{width:8px;height:8px;border-radius:3px;display:block}
+.money-allocation-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.money-allocation-copy>span{font-size:11px;line-height:1.4;color:var(--nexo-text)}
+.money-allocation-copy small,.money-allocation-amount small{font-size:9px;color:var(--nexo-muted);line-height:1.4}
+.money-allocation-amount{display:flex;flex-direction:column;align-items:flex-end;gap:3px;min-width:0}
+.money-allocation-amount strong{font-size:11px;white-space:nowrap;font-weight:650;font-variant-numeric:tabular-nums}
+.money-allocation-note{font-size:10px;line-height:1.6;color:var(--nexo-muted);margin:13px 0 0;padding-top:12px;border-top:1px solid var(--nexo-line)}
+@media(max-width:1100px){
+ .money-allocation-layout{grid-template-columns:minmax(130px,.72fr) minmax(0,1.28fr);gap:14px}
+ .money-donut{max-width:175px}
+}
+@media(max-width:760px){
+ .money-allocation-layout{grid-template-columns:minmax(0,1fr);gap:8px}
+ .money-donut{max-width:185px}
+ .money-allocation-item{padding:10px 0}
+ .money-allocation-copy>span{font-size:11px}
+ .money-allocation-amount strong{font-size:11px}
+ .money-allocation-note{font-size:10px}
+}
+@media(max-width:380px){
+ .money-donut{max-width:165px}
+ .money-allocation-item{grid-template-columns:8px minmax(0,1fr) auto;gap:7px}
+ .money-allocation-amount strong{font-size:10px}
+}
