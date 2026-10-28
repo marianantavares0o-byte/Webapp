@@ -212,3 +212,15 @@
   .mobile-nav button span { font-size: 7px; }
   .form-two { grid-template-columns: 1fr; }
 }
+
+/* Visão geral: gráfico circular maior, legenda abaixo */
+.lower>.surface:not(.calendar-panel) .donut-wrap { display: flex; flex-direction: column; align-items: stretch; gap: 20px; margin-top: 14px; }
+.lower>.surface:not(.calendar-panel) .donut { width: 100%; max-width: 290px; margin: 0 auto; }
+.lower>.surface:not(.calendar-panel) .legend { width: 100%; max-height: none; gap: 11px; }
+.lower>.surface:not(.calendar-panel) .legend span,
+.lower>.surface:not(.calendar-panel) .legend b { font-size: 11px; }
+@media (max-width: 620px) {
+  .lower>.surface:not(.calendar-panel) .donut { max-width: 250px; }
+  .lower>.surface:not(.calendar-panel) .legend span,
+  .lower>.surface:not(.calendar-panel) .legend b { font-size: 10px; }
+}
