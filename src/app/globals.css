@@ -490,3 +490,68 @@ footer { color: #718398; font-size: 9px; margin: 25px 0 5px; }
   .auth-card { padding: 26px 22px; }
   .modal { padding: 21px; }
 }
+
+
+/* Planejamento de compras futuras */
+.plans-page { gap: 26px; }
+.plans-intro { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(230px,.8fr); align-items: end; gap: 30px; padding-bottom: 23px; border-bottom: 1px solid var(--line); }
+.plans-intro h2 { margin-top: 7px; font-size: clamp(20px,2vw,26px); letter-spacing: -.8px; }
+.plans-intro p:not(.eyebrow) { max-width: 610px; margin-top: 8px; color: #8799AD; font-size: 11px; }
+.plans-total { justify-self: end; min-width: 210px; padding-left: 22px; border-left: 1px solid var(--line); }
+.plans-total span, .plans-total small { display: block; color: #8294A8; font-size: 9px; }
+.plans-total strong { display: block; margin: 5px 0; color: var(--neon-emerald); font: 650 25px 'Manrope',sans-serif; letter-spacing: -.8px; }
+.plans-workspace { display: grid; grid-template-columns: minmax(0,.9fr) minmax(0,1.1fr); align-items: start; gap: 36px; }
+.planned-expense-form { min-width: 0; padding: 0; scroll-margin-top: 24px; }
+.future-plan-form { display: grid; gap: 14px; }
+.future-plan-form label { display: block; color: #9AAABD; font-size: 10px; font-weight: 650; }
+.future-plan-form input, .future-plan-form select { display: block; width: 100%; min-height: 42px; margin-top: 7px; padding: 10px 12px; border: 1px solid rgba(142,167,193,.22); border-radius: 11px; outline: none; background: rgba(10,18,28,.8); color: #EAF1F9; font-size: 11px; }
+.future-plan-form input::placeholder { color: #62768C; }
+.future-plan-form input:focus, .future-plan-form select:focus { border-color: rgba(101,230,180,.6); box-shadow: 0 0 0 3px rgba(101,230,180,.07); }
+.plan-form-summary { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; align-items: center; margin-top: 2px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.plan-form-summary span { color: #8DA0B5; font-size: 10px; }
+.plan-form-summary strong { color: #E9F5F0; font: 650 17px 'Manrope',sans-serif; }
+.plan-form-summary small { grid-column: 1/-1; color: #6F8297; font-size: 9px; }
+.plan-message { color: var(--neon-emerald); font-size: 10px; }
+.plan-message.error { color: var(--danger); }
+.plan-save-state { color: #6F8297; font-size: 9px; }
+.plans-projection { min-width: 0; }
+.projection-chart { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); align-items: end; gap: 10px; height: 155px; padding: 10px 0 0; }
+.projection-month { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0; height: 100%; }
+.projection-bar-track { display: flex; align-items: end; justify-content: center; width: 100%; max-width: 34px; height: 100%; overflow: hidden; border-radius: 8px 8px 3px 3px; background: rgba(135,159,184,.07); }
+.projection-bar { width: 100%; min-height: 3px; border-radius: 7px 7px 2px 2px; background: linear-gradient(180deg,var(--neon-emerald),#1B8E79); box-shadow: 0 0 15px rgba(101,230,180,.12); transition: height .25s ease; }
+.projection-month strong { max-width: 100%; overflow: hidden; color: #C9D8E7; font-size: 8px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.projection-month span { color: #75889D; font-size: 9px; text-transform: capitalize; }
+.projection-note { display: flex; align-items: flex-start; gap: 9px; margin: 19px 0 23px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: #8194A8; font-size: 9px; line-height: 1.6; }
+.projection-note .icon { width: 15px; height: 15px; color: var(--ambient-blue); flex: none; margin-top: 1px; }
+.plans-list-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 7px; }
+.plans-list-heading h2 { margin: 0; }
+.plans-list-heading>span { display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 7px; background: rgba(101,230,180,.09); color: var(--neon-emerald); font-size: 9px; }
+.future-plan-list { display: grid; }
+.future-plan-row { display: grid; grid-template-columns: 35px minmax(0,1fr) auto 28px; align-items: center; gap: 11px; padding: 13px 0; border-top: 1px solid var(--line); }
+.future-plan-icon { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(115,181,255,.16); border-radius: 11px; background: rgba(54,127,232,.07); color: var(--ambient-blue); }
+.future-plan-main { min-width: 0; }
+.future-plan-main strong, .future-plan-main span, .future-plan-value strong, .future-plan-value span { display: block; }
+.future-plan-main strong { overflow: hidden; color: #E6EEF7; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.future-plan-main span { margin-top: 3px; color: #8092A7; font-size: 8px; }
+.future-plan-value { text-align: right; }
+.future-plan-value strong { color: #E5EDF6; font-size: 10px; }
+.future-plan-value span { margin-top: 3px; color: #8092A7; font-size: 8px; }
+.plans-empty { display: grid; gap: 5px; padding: 20px 0; border-top: 1px solid var(--line); }
+.plans-empty strong { color: #DDE7F2; font-size: 11px; }
+.plans-empty span { color: #8092A7; font-size: 10px; }
+.theme-light .plans-intro h2, .theme-light .future-plan-main strong, .theme-light .future-plan-value strong { color: #203249; }
+.theme-light .future-plan-form input, .theme-light .future-plan-form select { background: #FFFFFF; color: #1B2A3D; }
+.theme-light .plan-form-summary strong { color: #17694F; }
+@media (max-width: 850px) {
+  .plans-workspace { grid-template-columns: 1fr; gap: 30px; }
+  .plans-intro { grid-template-columns: 1fr auto; }
+}
+@media (max-width: 600px) {
+  .plans-intro { grid-template-columns: 1fr; gap: 18px; }
+  .plans-total { justify-self: stretch; min-width: 0; padding: 12px 0 0; border-left: 0; border-top: 1px solid var(--line); }
+  .future-plan-row { grid-template-columns: 32px minmax(0,1fr) auto 25px; gap: 8px; }
+  .future-plan-icon { width: 31px; height: 31px; }
+  .future-plan-main span { line-height: 1.45; }
+  .projection-chart { gap: 5px; height: 130px; }
+  .projection-month strong { font-size: 7px; }
+}
