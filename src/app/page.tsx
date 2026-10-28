@@ -218,9 +218,9 @@ function FinanceApp({ userId }: { userId: string }) {
         if (!cancelled) setOverviewInvestments([]);
       }
     }
-    loadOverviewInvestments();
+    if (tab === "visao") loadOverviewInvestments();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [userId, tab]);
 
   const [newExpense, setNewExpense] = useState({ name: "", category: "", amount: "", due: "", urgency: "Média" as Expense["urgency"], status: "Pendente" as Expense["status"] });
   const [newIncome, setNewIncome] = useState({ name: "", source: "", amount: "", day: "", confidence: "Média" as Income["confidence"] });
