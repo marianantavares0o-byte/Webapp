@@ -117,7 +117,7 @@ function MoneyAllocationChart({ slices, total }: { slices: AllocationSlice[]; to
   return (
     <div className="money-allocation-layout">
       <div className="money-donut-wrap">
-        <svg className="money-donut" viewBox="0 0 180 180" role="img" aria-label={`Distribuição das despesas cadastradas, total ${money(total)}`}>
+        <svg className="money-donut" viewBox="0 0 180 180" role="img" aria-label={`Composição do planejamento financeiro, total ${money(total)}`}>
           <circle cx="90" cy="90" r={radius} fill="none" stroke="var(--nexo-line)" strokeWidth="19" />
           {total > 0 && visibleSlices.map((slice) => {
             const length = (slice.value / total) * circumference;
@@ -126,7 +126,7 @@ function MoneyAllocationChart({ slices, total }: { slices: AllocationSlice[]; to
             const selected = selectedLabel === slice.label;
             return <circle key={slice.label} cx="90" cy="90" r={radius} fill="none" stroke={slice.color} strokeWidth={selected ? 24 : 19} strokeDasharray={`${Math.max(0, length - 1)} ${circumference}`} strokeDashoffset={-currentOffset} transform="rotate(-90 90 90)" strokeLinecap="butt" opacity={selectedLabel && !selected ? 0.42 : 1} />;
           })}
-          <text x="90" y="83" textAnchor="middle" className="money-donut-caption">{selectedSlice ? "CATEGORIA" : "TOTAL DE GASTOS"}</text>
+          <text x="90" y="83" textAnchor="middle" className="money-donut-caption">{selectedSlice ? "CATEGORIA" : "TOTAL PLANEJADO"}</text>
           <text x="90" y="103" textAnchor="middle" className="money-donut-total">{money(selectedSlice ? selectedSlice.value : total).replace(",00", "")}</text>
         </svg>
       </div>
@@ -475,6 +475,7 @@ function FinanceApp({ userId }: { userId: string }) {
               <div className="control-hero-actions">
                 <button type="button" className="control-action-primary" onClick={() => setShowAdd(true)}><Icon name="plus"/> Registrar despesa</button>
                 <button type="button" className="control-action-secondary" onClick={() => { setNewIncome({ name: "", source: "", amount: "", day: "", confidence: "Média" }); setEditingIncome(null); setShowAddIncome(true); }}><Icon name="arrow"/> Registrar receita</button>
+                <button type="button" className="control-action-secondary" onClick={() => setTab("planos")}><Icon name="calendar"/> Planejar compra</button>
               </div>
             </section>
 
@@ -530,16 +531,19 @@ function FinanceApp({ userId }: { userId: string }) {
 
             <section className="control-secondary-grid">
               <div className="panel allocation-panel control-allocation">
-                <div className="panel-heading"><div><p className="eyebrow">COMPOSIÇÃO</p><h2>Distribuição das despesas</h2><p>Custos fixos e variáveis das despesas cadastradas.</p></div><Icon name="target"/></div>
+                <div className="panel-heading"><div><p className="eyebrow">COMPOSIÇÃO</p><h2>Panorama do seu dinheiro</h2><p>Compromissos, capital simulado e saldo livre estimado.</p></div><Icon name="target"/></div>
                 {(() => {
-                  const fixedExpenses = expenses.filter(isFixedExpense).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
-                  const variableExpenses = expenses.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
+                  const pendingFixed = pending.filter(isFixedExpense).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
+                  const pendingVariable = pending.filter((expense) => !isFixedExpense(expense)).reduce((sum, expense) => sum + Math.max(0, expense.amount || 0), 0);
+                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
+                  const freeBalance = Math.max(0, balance - totalPending);
                   const allocation: AllocationSlice[] = [
-                    { label: "Despesas fixas", value: fixedExpenses, color: "#55D6BB", detail: "Pagas e pendentes" },
-                    { label: "Despesas variáveis e outras", value: variableExpenses, color: "#7D9BAA", detail: "Pagas e pendentes" }
+                    { label: "Despesas fixas pendentes", value: pendingFixed, color: "#65E6B4", detail: "Compromissos previstos" },
+                    { label: "Despesas variáveis", value: pendingVariable, color: "#367FE8", detail: "Compromissos previstos" },
+                    { label: "Capital em simulações", value: investedCapital, color: "#73B5FF", detail: "Não é carteira bancária" },
+                    { label: "Saldo livre estimado", value: freeBalance, color: "#567184", detail: "Saldo menos pendências" }
                   ];
                   const allocationTotal = allocation.reduce((sum, item) => sum + item.value, 0);
-                  const investedCapital = overviewInvestments.reduce((sum, investment) => sum + Math.max(0, investment.capital || 0), 0);
                   return (
                     <>
                       {allocationTotal > 0 ? <MoneyAllocationChart slices={allocation} total={allocationTotal}/> : <div className="allocation-empty"><strong>Sem despesas para classificar</strong><span>Cadastre despesas para visualizar a composição dos gastos.</span></div>}
@@ -547,7 +551,7 @@ function FinanceApp({ userId }: { userId: string }) {
                         <div><span>Saldo disponível</span><strong>{money(Math.max(0, balance))}</strong><small>Valor informado no planejamento</small></div>
                         <div><span>Capital em simulações</span><strong>{money(investedCapital)}</strong><small>Não representa uma carteira confirmada</small></div>
                       </div>
-                      <p className="money-allocation-note">O gráfico considera despesas pagas e pendentes. A classificação entre fixas e variáveis é estimada por palavras na descrição e categoria. Saldo e capital de simulações são exibidos separadamente.</p>
+                      <p className="money-allocation-note">As despesas fixas e variáveis consideram apenas pendências. O capital vem de simulações salvas, não de uma carteira confirmada. O saldo livre é estimado subtraindo as pendências do saldo informado; se as pendências superarem o saldo, o gráfico evidencia esse compromisso sem criar saldo negativo.</p>
                     </>
                   );
                 })()}
