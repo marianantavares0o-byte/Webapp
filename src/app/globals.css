@@ -50,3 +50,15 @@
 .calendar-empty,.calendar-note{font-size:10px;line-height:1.55;color:var(--muted,#a4adbd)}
 .calendar-empty{margin:14px 0 6px}.calendar-note{margin:14px 0 0}
 @media(max-width:700px){.calendar-heading{display:flex}.calendar-nav{width:100%;justify-content:space-between}.calendar-nav strong{flex:1}.calendar-day{min-height:39px;border-radius:8px}.calendar-grid{gap:3px}.calendar-summary>span{flex:1;justify-content:center}.calendar-event>strong{font-size:10px}}
+
+/* Proporções do painel de distribuição de gastos */
+.lower{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+.lower>.surface:not(.calendar-panel){display:flex;flex-direction:column;min-height:100%}
+.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(110px,.72fr) minmax(0,1.28fr);align-items:center;gap:12px;flex:1}
+.lower>.surface:not(.calendar-panel) .donut{max-width:210px}
+.lower>.surface:not(.calendar-panel) .legend{gap:10px;max-height:310px;overflow-y:auto;padding-right:3px}
+.lower>.surface:not(.calendar-panel) .legend>div{grid-template-columns:8px minmax(0,1fr) auto;gap:6px 9px}
+.lower>.surface:not(.calendar-panel) .legend span{white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+@media(max-width:1250px){.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(100px,.7fr) minmax(0,1.3fr)}.lower>.surface:not(.calendar-panel) .donut{max-width:175px}}
+@media(max-width:900px){.lower{grid-template-columns:1fr}.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(140px,.8fr) minmax(0,1.2fr)}}
+@media(max-width:620px){.lower>.surface:not(.calendar-panel) .donut-wrap{grid-template-columns:minmax(105px,.8fr) minmax(0,1.2fr);gap:5px}.lower>.surface:not(.calendar-panel) .legend{gap:8px;max-height:260px}}
