@@ -67,3 +67,148 @@
 /* Nexo brand mark: preserve the former 32px icon footprint across the app. */
 .brand-mark{display:block;width:32px;height:32px;flex:0 0 32px;overflow:visible}
 .auth-brand .brand-mark{width:32px;height:32px;flex:0 0 32px}
+
+
+/* Responsive comfort pass: balanced density on desktop and readable controls on mobile. */
+@media (min-width: 1251px) {
+  .page { max-width: 1400px; padding-inline: clamp(24px, 2.6vw, 42px); }
+  .topbar { padding-inline: clamp(24px, 2.6vw, 42px); min-height: 124px; }
+  .topbar h1 { font-size: clamp(23px, 1.8vw, 30px); }
+  .surface { padding: 19px; }
+  .hero { padding: 23px 26px 17px; }
+  .metrics { gap: 11px; }
+  .metrics article { padding: 14px 14px 12px; }
+  .grid-two, .lower { gap: 13px; }
+}
+@media (min-width: 901px) and (max-width: 1250px) {
+  .page { padding-inline: 23px; }
+  .topbar { padding-inline: 23px; }
+  .surface { padding: 17px; }
+  .heading h2 { font-size: 15px; }
+}
+@media (max-width: 900px) {
+  .topbar { padding: 23px clamp(20px, 3.5vw, 30px) 20px; }
+  .page { padding: 19px clamp(18px, 3.5vw, 30px) 30px; }
+  .topbar h1 { font-size: clamp(23px, 3vw, 27px); }
+  .topbar p { font-size: 12px; }
+  .crumb { font-size: 9px; }
+  .heading h2 { font-size: 16px; }
+  .heading p { font-size: 11px; }
+  .metrics article { padding: 15px; }
+  .metrics article>div { font-size: 11px; }
+  .metrics article>small { font-size: 10px; }
+  .chart-key, .legend span, .legend b { font-size: 10px; }
+  .upcoming>div b, .upcoming>strong, .quick b, .record-main b { font-size: 12px; }
+  .upcoming>div small, .record-main small, .quick small { font-size: 10px; }
+}
+@media (max-width: 620px) {
+  body { font-size: 14px; }
+  .topbar { padding: 18px 16px 16px; gap: 12px; }
+  .topbar h1 { font-size: clamp(22px, 5.5vw, 25px); }
+  .topbar p { font-size: 11px; line-height: 1.55; }
+  .crumb { font-size: 9px; letter-spacing: 1.2px; }
+  .top-actions .primary { min-height: 40px; padding: 0 11px; font-size: 10px; }
+  .page { padding: 14px 12px 26px; }
+  .hero { padding: 18px 15px 15px; }
+  .eyebrow { font-size: 10px; letter-spacing: 1.35px; }
+  .sync-label { font-size: 8px; }
+  .balances { gap: 12px; margin: 20px 0 17px; }
+  .balances strong { font-size: clamp(22px, 6vw, 27px); letter-spacing: -.8px; }
+  .balances>div small { font-size: 10px; line-height: 1.45; }
+  .balances p { font-size: 9px; }
+  .hero-bottom button { font-size: 11px; min-height: 30px; }
+  .hero-bottom small { font-size: 9px; }
+  .metrics { gap: 9px; }
+  .metrics article { padding: 13px 12px; }
+  .metrics article>div { font-size: 10px; gap: 6px; }
+  .micon { width: 28px; height: 28px; flex-basis: 28px; }
+  .metrics article>strong { font-size: clamp(16px, 4.3vw, 19px); margin: 10px 0 6px; }
+  .metrics article>small { font-size: 9px; line-height: 1.45; min-height: 25px; }
+  .surface { padding: 15px 13px; }
+  .heading h2 { font-size: 15px; }
+  .heading>div>small, .analytics-intro>small { font-size: 9px; letter-spacing: 1.3px; }
+  .heading p { font-size: 10px; line-height: 1.55; }
+  .text-link { font-size: 11px; min-height: 32px; }
+  .circle-btn { width: 36px; height: 36px; }
+  .chart-key { font-size: 10px; gap: 12px; }
+  .chart-note { font-size: 9px; }
+  .legend { gap: 10px; }
+  .legend span, .legend b { font-size: 9px; }
+  .upcoming { gap: 10px; padding: 14px 0; }
+  .item-icon, .record-icon { width: 37px; height: 37px; flex-basis: 37px; }
+  .upcoming>div b, .record-main b, .quick b { font-size: 12px; }
+  .upcoming>div small, .record-main small, .quick small { font-size: 10px; line-height: 1.45; }
+  .upcoming>strong { font-size: 11px; }
+  .upcoming>strong small { font-size: 9px; }
+  .priority { font-size: 9px; }
+  .quick>button { min-height: 56px; gap: 10px; }
+  .quick>button>i { width: 36px; height: 36px; }
+  footer { font-size: 8px; }
+  .summary>div { padding: 13px 14px; }
+  .summary small { font-size: 9px; }
+  .summary strong { font-size: 19px; }
+  .summary span { font-size: 9px; }
+  .toolbar { gap: 12px; }
+  .search { min-height: 42px; }
+  .search input { font-size: 12px; }
+  .filters button { min-height: 36px; padding: 8px 7px; font-size: 10px; }
+  .record { gap: 9px; padding: 14px 0; }
+  .record .amount { font-size: 12px; }
+  .status { font-size: 9px; padding: 6px 8px; }
+  .row-actions button:not(.delete) { min-height: 34px; font-size: 10px; }
+  .row-actions .delete, .delete { width: 32px; height: 32px; }
+  .asset-values span { font-size: 9px; }
+  .asset-values b { font-size: 11px; }
+  .investment-hero, .plans-hero { padding: 20px 16px; }
+  .investment-hero h2 { font-size: 29px; }
+  .investment-hero p, .plans-hero p { font-size: 10px; }
+  .invest-stats small { font-size: 9px; }
+  .invest-stats b { font-size: 11px; }
+  .plans-hero h2 { font-size: 23px; }
+  .analytics-intro h2 { font-size: 23px; }
+  .analytics-intro p { font-size: 11px; line-height: 1.65; }
+  .backdrop { padding: 8px; }
+  .modal { padding: 19px 16px; max-height: 90dvh; overflow-y: auto; }
+  .modal-head h2 { font-size: 20px; }
+  .modal-head small { font-size: 9px; }
+  .form { gap: 15px; }
+  .form label, .auth-card label { font-size: 11px; }
+  .form input, .form select, .auth-card input { min-height: 46px; font-size: 13px; padding-inline: 12px; }
+  .form-note { font-size: 11px; }
+  .projection small, .projection span { font-size: 10px; }
+  .projection b { font-size: 21px; }
+  .mobile-nav { left: 7px; right: 7px; bottom: 7px; padding: 7px 3px calc(7px + env(safe-area-inset-bottom)); }
+  .mobile-nav button { min-height: 48px; gap: 5px; }
+  .mobile-nav button span { font-size: 8px; }
+  .toast { font-size: 12px; }
+  .auth-card { padding: 27px 21px; }
+  .auth-card h1 { font-size: 27px; }
+  .auth-card>p { font-size: 12px; }
+  .auth-card input { min-height: 47px; }
+  .auth-links button { font-size: 10px; }
+  .auth-foot { font-size: 10px; }
+  .calendar-summary>span { padding: 8px 7px; font-size: 10px; }
+  .calendar-summary b { font-size: 11px; }
+  .calendar-weekday { font-size: 10px; }
+  .calendar-day { min-height: 42px; }
+  .calendar-day>span { font-size: 12px; }
+  .calendar-legend { font-size: 10px; }
+  .calendar-selected-head>b { font-size: 12px; }
+  .calendar-selected-head button { min-height: 32px; font-size: 10px; }
+  .calendar-event>span b { font-size: 12px; }
+  .calendar-event>span small, .calendar-empty, .calendar-note { font-size: 10px; }
+  .calendar-event>strong { font-size: 11px; }
+}
+@media (max-width: 380px) {
+  .topbar { padding-inline: 12px; }
+  .top-actions .primary { padding-inline: 8px; font-size: 9px; }
+  .page { padding-inline: 9px; }
+  .hero { padding-inline: 12px; }
+  .balances { gap: 9px; }
+  .balances strong { font-size: 21px; }
+  .metrics article { padding: 11px 9px; }
+  .metrics article>div { font-size: 9px; }
+  .surface { padding-inline: 11px; }
+  .mobile-nav button span { font-size: 7px; }
+  .form-two { grid-template-columns: 1fr; }
+}
