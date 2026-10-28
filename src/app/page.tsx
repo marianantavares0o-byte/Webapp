@@ -73,12 +73,17 @@ function NexoLogo({ compact = false }: { compact?: boolean }) {
     <div className={compact ? "nexo-logo compact" : "nexo-logo"} aria-label="Nexo">
       <svg viewBox="0 0 48 48" className="nexo-logo-mark" aria-hidden="true">
         <defs>
-          <linearGradient id="nexoMinimal" x1="7" y1="40" x2="41" y2="8" gradientUnits="userSpaceOnUse">
+          <linearGradient id="nexoFrame" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#67c7ff" />
+            <stop offset="1" stopColor="#4fd1b5" />
+          </linearGradient>
+          <linearGradient id="nexoLetter" x1="10" y1="38" x2="38" y2="10" gradientUnits="userSpaceOnUse">
             <stop offset="0" stopColor="#4fd1b5" />
             <stop offset="1" stopColor="#67c7ff" />
           </linearGradient>
         </defs>
-        <path d="M9 36V12c0-2.2 2.8-3.2 4.2-1.4l17.6 22V12c0-2.8 2.2-5 5-5h3v29c0 2.2-2.8 3.2-4.2 1.4L17 15.4V36c0 2.8-2.2 5-5 5H9V36Z" fill="url(#nexoMinimal)" />
+        <rect x="3.5" y="3.5" width="41" height="41" fill="none" stroke="url(#nexoFrame)" strokeWidth="2.4" strokeLinejoin="miter" />
+        <path d="M12 31V14L36 34V14" fill="none" stroke="url(#nexoLetter)" strokeWidth="2.7" strokeLinecap="butt" strokeLinejoin="miter" />
       </svg>
       <span>Nexo</span>
     </div>
