@@ -296,3 +296,68 @@
   .balances>i { width: 100%; height: 1px; margin: 0; }
   .balances>div { min-width: 0; }
 }
+
+/* ===== Aba Feedback (teste de usabilidade) ===== */
+.ux-wrap{display:grid;gap:14px;max-width:860px;margin:0 auto}
+.ux-eyebrow{display:block;font-size:9px;letter-spacing:1.6px;font-weight:700;color:var(--green);margin-bottom:8px}
+.ux-wrap h2{margin:0 0 8px;font-size:20px;letter-spacing:-.4px}
+.ux-wrap p{color:var(--muted);font-size:12.5px;line-height:1.6;margin:0}
+.ux-hint{font-size:11px!important}
+.ux-tasklist{list-style:none;margin:18px 0;padding:0;display:grid;gap:10px}
+.ux-tasklist li{display:grid;grid-template-columns:30px 1fr;gap:12px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#08131d99}
+.ux-tasklist li>i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;color:#031a15;background:linear-gradient(120deg,#55e9b4,#38cfa0)}
+.ux-tasklist b{font-size:13px}.ux-tasklist p{margin-top:3px}.ux-tasklist small{display:block;margin-top:6px;color:#7f95a6;font-size:11px}
+.ux-how{padding:13px;border-left:2px solid var(--blue);background:#5797ff12;border-radius:0 10px 10px 0;margin-bottom:16px}.ux-how b{font-size:12px}.ux-how p{margin-top:4px}
+.ux-code{max-width:340px;margin-bottom:16px}
+.ux-submit{min-height:44px;padding:0 20px;font-size:12px}
+.ux-progress{padding:16px 18px;border:1px solid var(--line);border-radius:15px;background:#0c1722cc}
+.ux-progress-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px;margin-bottom:10px}.ux-progress-top span{color:var(--muted)}
+.ux-bar{height:5px;border-radius:9px;background:#9bbdd01f;overflow:hidden}.ux-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .35s}
+.ux-steps{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.ux-step{display:flex;align-items:center;gap:8px;min-width:0}
+.ux-step>i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;border:1px solid var(--line);color:var(--muted);background:#08131d}
+.ux-step span{display:grid;min-width:0}.ux-step b{font-size:11px}.ux-step small{font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ux-step.now>i{border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 3px #5797ff22}
+.ux-step.ok>i{background:#45e1ad22;border-color:#45e1ad66;color:var(--green)}
+.ux-step.fail>i{background:#ff7d8722;border-color:#ff7d8766;color:var(--red)}
+.ux-task h2{font-size:18px}.ux-expected{margin-top:10px!important;padding-top:10px;border-top:1px solid var(--line)}.ux-expected b{color:var(--text)}
+.ux-cta{margin-top:18px;display:grid;gap:10px;justify-items:start}.ux-cta small{color:var(--muted);font-size:11px}
+.ux-running{margin-top:18px;display:grid;gap:14px}
+.ux-timer{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;border:1px solid #5797ff44;border-radius:13px;background:#5797ff12}
+.ux-timer i{width:9px;height:9px;border-radius:50%;background:var(--green);animation:uxpulse 1.4s ease-in-out infinite}
+.ux-timer strong{font-size:30px;letter-spacing:-1px;font-variant-numeric:tabular-nums}.ux-timer span{color:var(--muted);font-size:11px}
+@keyframes uxpulse{50%{opacity:.25}}
+.ux-actions{display:flex;gap:10px;flex-wrap:wrap}.ux-actions .primary,.ux-actions .secondary{min-height:42px;padding:0 18px;font-size:12px}
+.ux-result{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:18px 0 6px;padding:12px 14px;border-radius:11px;font-size:12px;border:1px solid var(--line)}
+.ux-result.ok{background:#45e1ad14;border-color:#45e1ad44}.ux-result.fail{background:#ff7d8714;border-color:#ff7d8744}.ux-result span{color:var(--muted)}
+.ux-form{display:grid;gap:14px;margin-top:8px}
+.ux-field{border:0;padding:0;margin:0;min-width:0}.ux-field legend{font-size:12.5px;font-weight:600;margin-bottom:8px;padding:0}
+.ux-choices{display:flex;gap:8px}
+.ux-choice{position:relative;min-width:84px;cursor:pointer}.ux-choice input{position:absolute;opacity:0;inset:0}
+.ux-choice span{display:block;text-align:center;padding:10px 16px;border-radius:10px;border:1px solid #9bbdd02a;background:#08131d;font-size:12px}
+.ux-choice.on span{border-color:var(--green);background:#45e1ad1c;color:#d9fff0}
+.ux-choice input:focus-visible+span{outline:2px solid var(--blue);outline-offset:2px}
+.ux-field:disabled .ux-choice{cursor:default;opacity:.8}
+.ux-text{display:flex;flex-direction:column;gap:6px;font-size:11.5px;font-weight:600;color:#a8bac7}
+.ux-text textarea,.ux-text input{width:100%;padding:10px 12px;color:var(--text);border:1px solid #9bbdd02a;border-radius:10px;background:#08131d;font:inherit;font-size:12.5px;font-weight:400;resize:vertical}
+.ux-text input{min-height:42px;max-width:220px}.ux-code input{max-width:none}
+.ux-text textarea:focus,.ux-text input:focus{outline:none;border-color:#5797ff88;box-shadow:0 0 0 3px #5797ff22}
+.ux-cond{display:grid;gap:12px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#08131d80}
+.has-error textarea,.has-error input{border-color:var(--red)}
+.ux-error{color:var(--red)!important;font-size:11px!important;font-weight:500;margin-top:6px!important}
+.ux-flash{padding:10px 14px;border-radius:11px;background:#10251f;border:1px solid #45e1ad33;color:#d9fff0!important}
+.ux-sync{font-size:10.5px!important}.ux-sync.error{color:var(--amber)!important}
+.ux-summary{display:grid;gap:9px;margin:18px 0}
+.ux-sum{padding:12px 14px;border:1px solid var(--line);border-radius:12px}.ux-sum.ok{border-left:3px solid var(--green)}.ux-sum.fail{border-left:3px solid var(--red)}
+.ux-sum header{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12px}.ux-sum header span{color:var(--muted)}
+.ux-sum dl{display:flex;gap:18px;flex-wrap:wrap;margin:8px 0 0}.ux-sum dt{font-size:10px;color:var(--muted)}.ux-sum dd{margin:2px 0 0;font-size:12px}
+.ux-chip{position:fixed;right:24px;bottom:24px;z-index:70;display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:999px;border:1px solid #5797ff66;background:#0b1a2af2;color:var(--text);font-size:12px;box-shadow:0 12px 35px #0006}
+.ux-chip i{width:8px;height:8px;border-radius:50%;background:var(--green);animation:uxpulse 1.4s ease-in-out infinite}
+.ux-chip span{font-variant-numeric:tabular-nums;font-weight:700}.ux-chip em{font-style:normal;color:var(--blue);font-size:11px}
+@media(max-width:760px){
+  .ux-steps{grid-template-columns:repeat(5,auto);justify-content:space-between}.ux-step span{display:none}
+  .ux-chip{right:12px;left:12px;bottom:86px;justify-content:center}
+  .ux-actions .primary,.ux-actions .secondary{flex:1 1 100%}
+  .ux-text input{max-width:none}.ux-timer strong{font-size:26px}
+}
+@media(prefers-reduced-motion:reduce){.ux-timer i,.ux-chip i{animation:none}}
